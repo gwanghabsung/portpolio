@@ -431,6 +431,10 @@
       </div>
       <div>USD/KRW <span class="rate" id="rateDisplay">—</span> <button class="btn-link" id="btnRefreshRate">새로고침</button></div>
       <div id="priceStatus" style="display: none;">시세 <span class="rate" id="priceUpdated">—</span> <button class="btn-link" id="btnRefreshPrices">새로고침</button></div>
+      <div class="seg" id="currencyToggle" style="margin-top: 4px;">
+        <button data-currency="USD">USD</button>
+        <button data-currency="KRW">₩</button>
+      </div>
     </div>
   </header>
 
@@ -1244,10 +1248,22 @@ const api = {
    FORMATTING
    ============================================================ */
 let CURRENT_RATE = 1350;
-const fmtUSD = (n) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmtUSD0 = (n) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+const CURRENCY_KEY = 'portfolio_display_currency';
+let DISPLAY_CURRENCY = localStorage.getItem(CURRENCY_KEY) || 'USD';
+const fmtUSD = (n) => {
+  if (DISPLAY_CURRENCY === 'KRW') return '₩' + Math.round((Number(n) || 0) * CURRENT_RATE).toLocaleString('ko-KR');
+  return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+const fmtUSD0 = (n) => {
+  if (DISPLAY_CURRENCY === 'KRW') return '₩' + Math.round((Number(n) || 0) * CURRENT_RATE).toLocaleString('ko-KR');
+  return '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+};
+const fmtUSDraw = (n) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtKRW = (usd) => '₩' + Math.round((Number(usd) || 0) * CURRENT_RATE).toLocaleString('ko-KR');
 const fmtKRWraw = (krw) => '₩' + Math.round(Number(krw) || 0).toLocaleString('ko-KR');
+const fmtShares = (n) => (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 4 }) + '주';
+const currencySymbol = () => DISPLAY_CURRENCY === 'KRW' ? '₩' : '$';
+const fmtSecondary = (usdAmount) => DISPLAY_CURRENCY === 'KRW' ? fmtUSDraw(usdAmount) : fmtKRW(usdAmount);
 const fmtNum = (n, d = 4) => (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: d });
 const fmtPct = (n) => (Number(n) || 0).toFixed(2) + '%';
 const fmtPctSigned = (n) => (n >= 0 ? '+' : '') + (Number(n) || 0).toFixed(2) + '%';
@@ -1699,7 +1715,7 @@ async function renderDashboard() {
   const unrealizedPct = (totalUnrealized !== null && totalCost > 0) ? (totalUnrealized / totalCost) * 100 : null;
 
   document.getElementById('statValue').textContent = hasPrices ? fmtUSD0(totalValue) : fmtUSD0(totalCost);
-  document.getElementById('statValueKRW').textContent = fmtKRW(hasPrices ? totalValue : totalCost) + (hasPrices ? '' : ' (cost)');
+  document.getElementById('statValueKRW').textContent = fmtSecondary(hasPrices ? totalValue : totalCost) + (hasPrices ? '' : ' (cost)');
 
   const unEl = document.getElementById('statUnrealized');
   const unSub = document.getElementById('statUnrealizedSub');
@@ -1716,7 +1732,7 @@ async function renderDashboard() {
 
   const taxOn = taxRate() > 0;
   document.getElementById('statDividends').textContent = fmtUSD(totalDiv);
-  document.getElementById('statDividendsKRW').textContent = fmtKRW(totalDiv) + (taxOn ? ' (세후)' : '');
+  document.getElementById('statDividendsKRW').textContent = fmtSecondary(totalDiv) + (taxOn ? ' (세후)' : '');
   const realizedEl = document.getElementById('statRealized');
   realizedEl.textContent = signedUSD(totalRealized);
   realizedEl.className = 'value display num ' + (totalRealized >= 0 ? 'pos' : (totalRealized < 0 ? 'neg' : ''));
@@ -1732,14 +1748,14 @@ async function renderDashboard() {
       ? `<div>${fmtUSD(h.avgBuy)}</div><div class="muted" style="font-size: 11px;">${fmtUSD(h.currentPrice)}</div>`
       : fmtUSD(h.avgBuy);
     const valueDisplay = h.currentValue !== null
-      ? `<div>${fmtUSD(h.currentValue)}</div><div class="muted" style="font-size: 11px;">${fmtUSD(h.heldCost)} cost</div>`
-      : fmtUSD(h.heldCost);
+      ? `<div style="font-weight: 600; font-size: 14px;">${fmtUSD(h.currentValue)}</div><div class="muted" style="font-size: 11px; opacity: 0.7;">${fmtUSD(h.heldCost)} cost</div>`
+      : `<div style="font-weight: 600;">${fmtUSD(h.heldCost)}</div>`;
     const unrealDisplay = h.unrealizedPL !== null
       ? `<span class="${h.unrealizedPL >= 0 ? 'pos' : 'neg'}">${signedUSD(h.unrealizedPL)} <span style="font-size: 11px;">(${fmtPctSigned(h.unrealizedPct)})</span></span>`
       : '<span class="muted">—</span>';
     return `<tr>
       <td class="ticker-cell" data-label="티커">${h.symbol}</td>
-      <td class="right num" data-label="수량">${fmtNum(h.heldShares)}</td>
+      <td class="right num" data-label="수량">${fmtShares(h.heldShares)}</td>
       <td class="right num" data-label="평균/현재">${priceDisplay}</td>
       <td class="right num" data-label="평가금액">${valueDisplay}</td>
       <td class="right num" data-label="미실현">${unrealDisplay}</td>
@@ -1761,7 +1777,7 @@ async function renderTransactions() {
     return `<tr>
       <td class="ticker-cell" data-label="" style="font-family: 'Inter'; font-weight: 600;">${t.symbol.toUpperCase()} <span class="type-pill ${isBuy ? 'type-buy' : 'type-sell'}" style="margin-left: 8px;">${isBuy ? '매수' : '매도'}</span></td>
       <td class="muted num" data-label="날짜">${fmtDate(t.date)}</td>
-      <td class="right num" data-label="수량">${fmtNum(t.shares)}</td>
+      <td class="right num" data-label="수량">${fmtShares(t.shares)}</td>
       <td class="right num" data-label="단가">${fmtUSD(t.price)}</td>
       <td class="right num" data-label="총액">${fmtUSD(total)}</td>
       <td class="muted" data-label="메모">${t.memo || ''}</td>
@@ -2901,6 +2917,22 @@ document.getElementById('allocationToggle').addEventListener('click', (e) => {
   setAllocBasis(btn.dataset.basis);
   renderAllocation();
 });
+
+// Currency toggle (USD/KRW display)
+function updateCurrencyToggleUI() {
+  document.querySelectorAll('#currencyToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.currency === DISPLAY_CURRENCY);
+  });
+}
+document.getElementById('currencyToggle').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-currency]');
+  if (!btn) return;
+  DISPLAY_CURRENCY = btn.dataset.currency;
+  localStorage.setItem(CURRENCY_KEY, DISPLAY_CURRENCY);
+  updateCurrencyToggleUI();
+  await refreshAll();
+});
+updateCurrencyToggleUI();
 
 // Coach style toggle
 document.getElementById('coachStyleSeg').addEventListener('click', async (e) => {
