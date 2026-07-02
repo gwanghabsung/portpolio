@@ -1,0 +1,3012 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#FAFAF7" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)" />
+<title>Portfolio Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root, [data-theme="light"] {
+    --bg: #FAFAFA;
+    --surface: #FFFFFF;
+    --surface-soft: #F5F5F4;
+    --text: #18181B;
+    --muted: #71717A;
+    --border: #E7E5E4;
+    --border-strong: #D4D4D8;
+    --accent: #166534;
+    --accent-soft: #F0FDF4;
+    --positive: #15803D;
+    --negative: #B91C1C;
+    --warn: #A16207;
+    --warn-soft: #FEFCE8;
+    --hover-bg: #F5F5F4;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  [data-theme="dark"] {
+    --bg: #18181B;
+    --surface: #1F1F23;
+    --surface-soft: #27272A;
+    --text: #FAFAFA;
+    --muted: #A1A1AA;
+    --border: #2E2E33;
+    --border-strong: #3F3F46;
+    --accent: #4ADE80;
+    --accent-soft: #14532D33;
+    --positive: #4ADE80;
+    --negative: #F87171;
+    --warn: #FBBF24;
+    --warn-soft: #422006;
+    --hover-bg: #27272A;
+    --shadow-sm: none;
+    --shadow: none;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased; transition: background 0.2s, color 0.2s;
+  }
+  .num, .ticker { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+  .app { max-width: 1100px; margin: 0 auto; padding: 40px 32px 80px; }
+  @media (max-width: 600px) { .app { padding: 20px 16px 64px; } }
+
+  /* Header */
+  header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding-bottom: 24px; border-bottom: 1px solid var(--border); margin-bottom: 20px;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .brand .title { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1; }
+  .brand .sub { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .header-meta { text-align: right; font-size: 12px; color: var(--muted); line-height: 1.6; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .header-meta .rate { font-family: 'JetBrains Mono', monospace; color: var(--text); }
+  .header-controls { display: flex; gap: 8px; align-items: center; }
+  .icon-btn {
+    background: none; border: 1px solid var(--border); cursor: pointer;
+    width: 30px; height: 30px; border-radius: 4px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--muted); transition: all 0.15s;
+  }
+  .icon-btn:hover { color: var(--text); background: var(--hover-bg); }
+  @media (max-width: 600px) {
+    .brand .title { font-size: 18px; }
+    .brand .sub { font-size: 12px; }
+    .header-meta { text-align: left; align-items: flex-start; font-size: 11px; }
+    header { padding-bottom: 16px; margin-bottom: 16px; }
+  }
+
+  /* Sync banner */
+  .sync-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 14px; border-radius: 4px; margin-bottom: 24px;
+    font-size: 13px; flex-wrap: wrap;
+  }
+  .sync-banner.disconnected { background: var(--warn-soft); border: 1px solid var(--warn); color: var(--warn); }
+  .sync-banner.connected { background: var(--accent-soft); border: 1px solid var(--accent); color: var(--accent); }
+  .sync-banner.syncing { background: var(--surface-soft); border: 1px solid var(--border); color: var(--muted); }
+  .sync-banner .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sync-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+  .sync-dot.green { background: var(--accent); }
+  .sync-dot.amber { background: var(--warn); }
+  .sync-dot.gray { background: var(--muted); }
+  .sync-dot.pulse { animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  @media (max-width: 600px) { .sync-banner { padding: 8px 12px; font-size: 12px; } }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 0; margin-bottom: 32px; border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 10px 14px; background: none; border: none; cursor: pointer;
+    font-family: inherit; font-size: 13px; color: var(--muted); font-weight: 500;
+    border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--text); border-bottom-color: var(--text); }
+  @media (max-width: 600px) {
+    .tabs { margin-bottom: 20px; }
+    .tab { padding: 10px 12px; }
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Stat grid */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 32px; box-shadow: var(--shadow); }
+  .stat { padding: 18px 20px; border-right: 1px solid var(--border); }
+  .stat:last-child { border-right: none; }
+  .stat .label { color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 10px; }
+  .stat .value { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1; font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  .stat .sub { color: var(--muted); font-size: 12px; margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
+  @media (max-width: 720px) {
+    .stats { grid-template-columns: repeat(2, 1fr); margin-bottom: 24px; }
+    .stat { border-right: none; border-bottom: 1px solid var(--border); }
+    .stat:nth-child(odd) { border-right: 1px solid var(--border); }
+    .stat:nth-last-child(-n+2) { border-bottom: none; }
+  }
+  @media (max-width: 600px) { .stat { padding: 14px 16px; } .stat .value { font-size: 18px; } }
+
+  .section { margin-bottom: 36px; }
+  @media (max-width: 600px) { .section { margin-bottom: 24px; } }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
+  .section-title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .section-note { color: var(--muted); font-size: 13px; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 11px 16px; text-align: left; font-size: 13px; }
+  th { font-weight: 500; color: var(--muted); font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--hover-bg); }
+  td.right, th.right { text-align: right; font-variant-numeric: tabular-nums; }
+  td.ticker-cell { font-family: 'JetBrains Mono', monospace; font-weight: 500; letter-spacing: 0.02em; }
+  .empty { padding: 40px; text-align: center; color: var(--muted); font-size: 13px; }
+
+  /* Mobile: table → cards */
+  @media (max-width: 640px) {
+    table { display: block; background: transparent; border: none; border-radius: 0; }
+    thead { display: none; }
+    tbody { display: block; }
+    tbody tr {
+      display: block; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; margin-bottom: 8px; padding: 14px 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    tbody tr:hover { background: var(--surface); }
+    tbody td {
+      display: flex; justify-content: space-between; padding: 4px 0;
+      border: none; text-align: right; font-size: 13px;
+    }
+    tbody td::before {
+      content: attr(data-label);
+      color: var(--muted); font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.04em; font-weight: 500; text-align: left;
+      font-family: 'Inter', sans-serif; align-self: center;
+    }
+    tbody td.ticker-cell {
+      font-size: 15px; padding: 0 0 8px 0;
+      border-bottom: 1px solid var(--border); margin-bottom: 6px;
+      justify-content: space-between;
+    }
+    tbody td.ticker-cell::before { display: none; }
+    tbody td.empty { display: block; text-align: center; padding: 32px 16px; }
+    tbody td.empty::before { display: none; }
+    tbody tr:has(td.empty) { padding: 0; }
+  }
+
+  .type-pill { display: inline-block; padding: 1px 7px; font-size: 11px; border-radius: 3px; font-weight: 500; letter-spacing: 0.02em; }
+  .type-buy { background: var(--accent-soft); color: var(--accent); }
+  .type-sell { background: var(--warn-soft); color: var(--negative); }
+
+  /* Cards & forms */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+  @media (max-width: 600px) { .card { padding: 16px; } }
+  .form-row { display: grid; grid-template-columns: auto repeat(5, 1fr) auto; gap: 12px; align-items: end; }
+  .form-row.div { grid-template-columns: repeat(3, 1fr) 2fr auto; }
+  @media (max-width: 900px) { .form-row, .form-row.div { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) {
+    .form-row, .form-row.div { grid-template-columns: 1fr; gap: 10px; }
+    .form-row button[type="submit"] { width: 100%; padding: 12px; }
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .field label { font-size: 11px; color: var(--muted); font-weight: 500; letter-spacing: 0.02em; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
+  .field input, .field select {
+    font-family: inherit; font-size: 14px; padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: 3px; background: var(--surface); color: var(--text);
+    transition: border-color 0.15s; min-height: 36px; width: 100%; min-width: 0;
+  }
+  .field input::placeholder { color: var(--muted); opacity: 0.55; }
+  @media (max-width: 600px) { .field input, .field select { font-size: 16px; padding: 10px 12px; } }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--text); }
+  .field input.ticker-input { font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.04em; }
+  .field input.code-input { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+  .star-btn {
+    background: none; border: none; cursor: pointer; padding: 0; line-height: 1;
+    font-size: 15px; color: var(--muted); transition: color 0.15s;
+  }
+  .star-btn:hover, .star-btn.active { color: var(--warn); }
+
+  /* Ticker pills */
+  .ticker-suggest { grid-column: 1 / -1; padding: 4px 0 0; }
+  .ticker-pills { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .ticker-pill {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    padding: 4px 10px; border-radius: 3px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); transition: all 0.15s; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 4px;
+    min-height: 26px;
+  }
+  .ticker-pill:hover { border-color: var(--text); }
+  .ticker-pill.favorite { color: var(--warn); }
+  .ticker-pill.held { color: var(--accent); border-color: var(--accent); }
+  .ticker-pill .star { font-size: 10px; }
+  @media (max-width: 600px) { .ticker-pill { padding: 6px 12px; min-height: 32px; } }
+
+  /* Buttons */
+  .btn {
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    padding: 8px 14px; border-radius: 3px; cursor: pointer; transition: all 0.15s;
+    border: 1px solid var(--text); background: var(--text); color: var(--bg);
+    min-height: 36px;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn.small { padding: 5px 10px; font-size: 12px; min-height: 28px; }
+  .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+  .btn-ghost:hover { background: var(--hover-bg); border-color: var(--text); opacity: 1; }
+  .btn-icon {
+    background: none; border: none; cursor: pointer; color: var(--muted);
+    font-size: 13px; padding: 4px 8px; font-family: inherit; border-radius: 3px;
+  }
+  .btn-icon:hover { color: var(--text); background: var(--hover-bg); }
+  .btn-link { background: none; border: none; color: var(--muted); cursor: pointer; font-family: inherit; font-size: 12px; padding: 0; text-decoration: underline; text-underline-offset: 2px; }
+  .btn-link:hover { color: var(--text); }
+
+  .pos { color: var(--positive); }
+  .neg { color: var(--negative); }
+  .muted { color: var(--muted); }
+  .stat .value.pos { color: var(--positive); }
+  .stat .value.neg { color: var(--negative); }
+
+  .chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 20px; box-shadow: var(--shadow); }
+  .chart-wrap canvas { max-height: 280px; }
+  @media (max-width: 600px) { .chart-wrap { padding: 14px; } .chart-wrap canvas { max-height: 220px; } }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; gap: 16px; } }
+
+  /* Goal hero */
+  .goal-hero { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 28px; margin-bottom: 20px; box-shadow: var(--shadow); }
+  @media (max-width: 600px) { .goal-hero { padding: 20px 16px; } }
+  .goal-hero .eyebrow { color: var(--muted); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; }
+  .goal-hero .big { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin: 10px 0 4px; font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  .goal-hero .big .of { font-family: 'Inter', sans-serif; font-size: 16px; color: var(--muted); font-weight: 400; margin-left: 4px; }
+  @media (max-width: 600px) { .goal-hero .big { font-size: 26px; } .goal-hero .big .of { font-size: 14px; } }
+  .goal-hero .meta { color: var(--muted); font-size: 13px; }
+  .progress { height: 6px; background: var(--surface-soft); border-radius: 3px; overflow: hidden; margin: 20px 0 8px; }
+  .progress-fill { height: 100%; background: var(--accent); transition: width 0.4s ease; }
+  .progress-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .goal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+  @media (max-width: 720px) { .goal-grid { grid-template-columns: 1fr; } }
+  .goal-card { background: var(--surface-soft); border-radius: 4px; padding: 14px 16px; }
+  .goal-card .l { color: var(--muted); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; }
+  .goal-card .v { font-family: 'JetBrains Mono', monospace; font-size: 15px; margin-top: 4px; font-weight: 500; }
+  .goal-card .s { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .goal-settings { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+  @media (max-width: 720px) { .goal-settings { grid-template-columns: 1fr; } }
+
+  .insight { background: var(--accent-soft); border: 1px solid var(--accent); color: var(--accent); padding: 10px 14px; border-radius: 4px; margin: 16px 0; font-size: 13px; }
+  .insight.warn { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+
+  /* Settings */
+  .settings-row { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .settings-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .settings-row:first-child { padding-top: 0; }
+  .settings-row .lbl { flex: 0 0 200px; color: var(--muted); font-size: 13px; }
+  .settings-row .val { flex: 1; min-width: 200px; }
+  .settings-row input { width: 100%; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 3px; background: var(--surface-soft); color: var(--muted); }
+  .badge.live { background: var(--accent-soft); color: var(--accent); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+
+  .fav-manage { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .fav-tag { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 4px 8px 4px 10px; border-radius: 3px; background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn); display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+  .fav-tag button { background: none; border: none; color: var(--warn); cursor: pointer; padding: 0; font-size: 14px; line-height: 1; }
+
+  /* Segment control */
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+  .seg button { background: none; border: none; padding: 6px 12px; font-family: inherit; font-size: 12px; color: var(--muted); cursor: pointer; border-right: 1px solid var(--border); }
+  .seg button:last-child { border-right: none; }
+  .seg button.active { background: var(--text); color: var(--bg); }
+  .seg button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .toggle-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+  .toggle { position: relative; width: 38px; height: 20px; background: var(--border-strong); border-radius: 10px; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+  .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.2s; }
+  .toggle.on { background: var(--text); }
+  .toggle.on::after { transform: translateX(18px); }
+
+  .help { font-size: 12px; color: var(--muted); margin: 8px 0; line-height: 1.5; }
+  .help a { color: var(--text); }
+  .help code { background: var(--surface-soft); padding: 1px 4px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  .annual-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+  .annual-card { background: var(--surface-soft); border-radius: 4px; padding: 14px 16px; }
+  .annual-card .year { font-size: 15px; font-weight: 600; }
+  .annual-card .nums { font-family: 'JetBrains Mono', monospace; font-size: 12px; margin-top: 8px; color: var(--muted); line-height: 1.7; }
+  .annual-card .nums .v { color: var(--text); }
+  .annual-card .net { color: var(--positive); font-size: 14px; font-weight: 500; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+
+  /* Allocation */
+  .allocation-wrap { display: grid; grid-template-columns: 280px 1fr; gap: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 20px; align-items: center; box-shadow: var(--shadow); }
+  @media (max-width: 720px) { .allocation-wrap { grid-template-columns: 1fr; gap: 16px; padding: 16px; } }
+  .allocation-chart-wrap { position: relative; height: 240px; }
+  @media (max-width: 720px) { .allocation-chart-wrap { height: 200px; } }
+  .allocation-legend { display: flex; flex-direction: column; gap: 2px; max-height: 280px; overflow-y: auto; }
+  .allocation-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 3px; transition: background 0.15s; }
+  .allocation-row:hover { background: var(--surface-soft); }
+  .allocation-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .allocation-info { flex: 1; display: flex; align-items: center; justify-content: space-between; min-width: 0; gap: 8px; }
+  .allocation-info .label { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 13px; white-space: nowrap; }
+  .allocation-info .right-side { display: flex; gap: 10px; align-items: baseline; font-family: 'JetBrains Mono', monospace; }
+  .allocation-info .right-side .amt { font-size: 12px; color: var(--muted); }
+  .allocation-info .right-side .pct { font-size: 13px; font-weight: 500; min-width: 48px; text-align: right; }
+
+  /* Coach */
+  .coach-hero { display: flex; gap: 24px; align-items: center; }
+  .grade-block { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .grade-letter { font-size: 56px; line-height: 1; font-weight: 700; letter-spacing: -0.03em; }
+  .grade-score { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .grade-summary { flex: 1; font-size: 14px; line-height: 1.5; }
+  .grade-A { color: var(--positive); }
+  .grade-B { color: var(--text); }
+  .grade-C { color: var(--warn); }
+  .grade-D, .grade-F { color: var(--negative); }
+  @media (max-width: 600px) { .coach-hero { flex-direction: column; align-items: flex-start; gap: 16px; } .grade-letter { font-size: 44px; } }
+
+  .cat-row { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .cat-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .cat-row:first-child { padding-top: 0; }
+  .cat-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .cat-name { font-weight: 500; font-size: 13px; }
+  .cat-score { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 14px; }
+  .cat-bar { height: 4px; background: var(--surface-soft); border-radius: 2px; overflow: hidden; }
+  .cat-fill { height: 100%; transition: width 0.4s ease; }
+  .cat-detail { color: var(--muted); font-size: 12px; margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
+
+  .flag-item { padding: 10px 14px; border-radius: 4px; margin-bottom: 6px; font-size: 13px; line-height: 1.55; display: flex; gap: 10px; align-items: flex-start; }
+  .flag-item:last-child { margin-bottom: 0; }
+  .flag-item.good { background: var(--accent-soft); color: var(--accent); }
+  .flag-item.warn { background: var(--warn-soft); color: var(--warn); }
+  .flag-item.tip { background: var(--surface-soft); color: var(--text); }
+  .flag-icon { flex-shrink: 0; font-weight: 600; }
+
+  /* Edit mode + modal */
+  .form-edit-cancel { display: none; }
+  .form-edit-cancel.active { display: inline-block; }
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    max-width: 460px; width: 100%; padding: 24px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  }
+  .modal h3 { margin: 0 0 12px; font-size: 16px; font-weight: 600; }
+  .modal-body p { margin: 0 0 10px; font-size: 14px; line-height: 1.5; }
+  .modal-body ul { margin: 0 0 14px; padding-left: 18px; font-size: 13px; line-height: 1.6; }
+  .modal-body ul li { margin-bottom: 6px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
+  .btn.danger { background: var(--warn); border-color: var(--warn); color: white; }
+  [data-theme="dark"] .btn.danger { color: var(--bg); }
+  .btn.danger:hover { opacity: 0.85; }
+
+  /* Simulator-specific */
+  .sim-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 12px; }
+  @media (max-width: 720px) { .sim-form { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .sim-form { grid-template-columns: 1fr; } }
+  .position-card { background: var(--surface-soft); border-radius: 4px; padding: 16px; margin-bottom: 10px; }
+  .position-card:last-child { margin-bottom: 0; }
+  .position-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .position-ticker { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 14px; letter-spacing: 0.04em; }
+  .position-summary { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); }
+  .position-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 720px) { .position-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .position-grid { grid-template-columns: 1fr; } }
+  .position-grid .field input { min-height: 32px; padding: 6px 10px; }
+  .position-empty { padding: 32px 16px; text-align: center; color: var(--muted); font-size: 13px; background: var(--surface-soft); border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <div class="title">Portfolio Journal</div>
+      <div class="sub">매수·매도·배당을 기록하는 투자 일지</div>
+    </div>
+    <div class="header-meta" id="headerMeta">
+      <div class="header-controls">
+        <span id="headerDate"></span>
+        <button class="icon-btn" id="btnTheme" title="테마">
+          <svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+      <div>USD/KRW <span class="rate" id="rateDisplay">—</span> <button class="btn-link" id="btnRefreshRate">새로고침</button></div>
+      <div id="priceStatus" style="display: none;">시세 <span class="rate" id="priceUpdated">—</span> <button class="btn-link" id="btnRefreshPrices">새로고침</button></div>
+    </div>
+  </header>
+
+  <div class="sync-banner disconnected" id="syncBanner">
+    <div><span class="sync-dot amber"></span><span id="syncBannerText">Gist 동기화가 설정되지 않았어요.</span></div>
+    <div class="actions" id="syncActions">
+      <button class="btn small" id="btnGoToSync">설정하기</button>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="dashboard">대시보드</button>
+    <button class="tab" data-tab="transactions">거래</button>
+    <button class="tab" data-tab="dividends">배당금</button>
+    <button class="tab" data-tab="goal">목표</button>
+    <button class="tab" data-tab="simulator">시뮬레이터</button>
+    <button class="tab" data-tab="coach">코치</button>
+    <button class="tab" data-tab="settings">설정</button>
+  </nav>
+
+  <!-- DASHBOARD -->
+  <section class="panel active" id="panel-dashboard">
+    <div class="stats">
+      <div class="stat">
+        <div class="label">평가금액</div>
+        <div class="value display num"><span id="statValue">$0</span></div>
+        <div class="sub" id="statValueKRW">₩0</div>
+      </div>
+      <div class="stat">
+        <div class="label">미실현 손익</div>
+        <div class="value display num" id="statUnrealized">—</div>
+        <div class="sub" id="statUnrealizedSub">시세 정보 필요</div>
+      </div>
+      <div class="stat">
+        <div class="label">받은 배당금</div>
+        <div class="value display num"><span id="statDividends">$0</span></div>
+        <div class="sub" id="statDividendsKRW">₩0</div>
+      </div>
+      <div class="stat">
+        <div class="label">실현 손익</div>
+        <div class="value display num"><span id="statRealized">$0</span></div>
+        <div class="sub" id="statRealizedKRW">₩0</div>
+      </div>
+    </div>
+
+    <div class="section" id="allocationSection" style="display: none;">
+      <div class="section-head">
+        <div class="section-title">포트폴리오 구성</div>
+        <div class="seg" id="allocationToggle">
+          <button data-basis="value" class="active">평가금액</button>
+          <button data-basis="cost">투자금</button>
+        </div>
+      </div>
+      <div class="allocation-wrap">
+        <div class="allocation-chart-wrap"><canvas id="chartAllocation"></canvas></div>
+        <div class="allocation-legend" id="allocationLegend"></div>
+      </div>
+      <div id="allocationWarning"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">보유 종목</div>
+        <div class="section-note" id="holdingsNote">평균 단가는 매수 평균</div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>티커</th><th class="right">수량</th><th class="right">평균/현재</th><th class="right">평가금액</th><th class="right">미실현</th><th class="right">배당</th><th class="right">YoC</th></tr>
+        </thead>
+        <tbody id="holdingsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- TRANSACTIONS -->
+  <section class="panel" id="panel-transactions">
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title" id="txFormTitle">새 거래</div>
+        <button type="button" class="btn-link form-edit-cancel" id="txEditCancel">수정 취소</button>
+      </div>
+      <form id="formTransaction">
+        <div class="ticker-suggest"><div class="ticker-pills" id="pillsTx"></div></div>
+        <div class="form-row" style="margin-top: 12px;">
+          <div class="field"><label>유형</label><select name="type"><option value="buy">매수</option><option value="sell">매도</option></select></div>
+          <div class="field"><label>티커 <button type="button" class="star-btn" id="starTx">☆</button></label><input type="text" name="symbol" class="ticker-input" placeholder="AAPL" list="tickerList" required /></div>
+          <div class="field"><label>수량</label><input type="number" name="shares" step="0.0001" min="0" inputmode="decimal" required /></div>
+          <div class="field"><label>단가 ($)</label><input type="number" name="price" step="0.01" min="0" inputmode="decimal" required /></div>
+          <div class="field"><label>날짜</label><input type="date" name="date" required /></div>
+          <div class="field"><label>메모</label><input type="text" name="memo" placeholder="(선택)" /></div>
+          <button type="submit" class="btn" id="txSubmitBtn">기록</button>
+        </div>
+      </form>
+    </div>
+    <div class="section">
+      <div class="section-head"><div class="section-title">거래 이력</div><div class="section-note"><span id="txCount">0</span>건</div></div>
+      <table>
+        <thead><tr><th>티커</th><th>날짜</th><th class="right">수량</th><th class="right">단가</th><th class="right">총액</th><th>메모</th><th></th></tr></thead>
+        <tbody id="transactionsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- DIVIDENDS -->
+  <section class="panel" id="panel-dividends">
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title" id="divFormTitle">배당금 기록</div>
+        <button type="button" class="btn-link form-edit-cancel" id="divEditCancel">수정 취소</button>
+      </div>
+      <form id="formDividend">
+        <div class="ticker-suggest"><div class="ticker-pills" id="pillsDiv"></div></div>
+        <div class="form-row div" style="margin-top: 12px;">
+          <div class="field"><label>티커 <button type="button" class="star-btn" id="starDiv">☆</button></label><input type="text" name="symbol" class="ticker-input" placeholder="SCHD" list="tickerList" required /></div>
+          <div class="field"><label id="lblDivAmount">금액 ($) — 세전</label><input type="number" name="amount" step="0.01" min="0" inputmode="decimal" required /></div>
+          <div class="field"><label>지급일</label><input type="date" name="date" required /></div>
+          <div class="field"><label>메모</label><input type="text" name="memo" placeholder="(선택)" /></div>
+          <button type="submit" class="btn" id="divSubmitBtn">기록</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card" id="annualSummaryCard" style="display: none;">
+      <div class="section-title" style="margin-bottom: 14px;">연도별 요약</div>
+      <div class="annual-summary" id="annualSummary"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="chart-wrap"><div class="section-title" style="margin-bottom: 14px;">월별 배당금</div><canvas id="chartMonthly"></canvas></div>
+      <div class="chart-wrap"><div class="section-title" style="margin-bottom: 14px;">종목별 배당금</div><canvas id="chartBySymbol"></canvas></div>
+    </div>
+
+    <div class="section" style="margin-top: 24px;">
+      <div class="section-head"><div class="section-title">배당 이력</div><div class="section-note"><span id="dividendCount">0</span>건</div></div>
+      <table>
+        <thead id="dividendsHead">
+          <tr><th>티커</th><th>지급일</th><th class="right">금액 ($)</th><th class="right">금액 (₩)</th><th>메모</th><th></th></tr>
+        </thead>
+        <tbody id="dividendsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- GOAL -->
+  <section class="panel" id="panel-goal">
+    <div class="goal-hero">
+      <div class="eyebrow">월 배당 목표</div>
+      <div class="big"><span id="goalCurrent">₩0</span> <span class="of">/ <span id="goalTarget">₩1,000,000</span></span></div>
+      <div class="meta" id="goalBasis">최근 12개월 월평균 배당 기준</div>
+      <div class="progress"><div class="progress-fill" id="goalProgressFill" style="width: 0%;"></div></div>
+      <div class="progress-labels"><span id="goalProgressPct">0%</span><span id="goalGap">남은 목표: ₩1,000,000</span></div>
+      <div class="goal-grid">
+        <div class="goal-card"><div class="l">지난 달 실제</div><div class="v" id="goalLastMonth">₩0</div><div class="s" id="goalLastMonthUSD">$0</div></div>
+        <div class="goal-card"><div class="l">전체 월평균</div><div class="v" id="goalAllTime">₩0</div><div class="s" id="goalAllTimeUSD">$0</div></div>
+        <div class="goal-card"><div class="l">추가 필요 투자금</div><div class="v" id="goalNeeded">—</div><div class="s">예상 배당 수익률 기준</div></div>
+      </div>
+      <div class="goal-settings">
+        <div class="field"><label>월 배당 목표 (₩)</label><input type="number" id="inputGoalTarget" step="10000" min="0" inputmode="numeric" /></div>
+        <div class="field"><label>예상 배당 수익률 (% / 연)</label><input type="number" id="inputGoalYield" step="0.1" min="0" inputmode="decimal" /></div>
+      </div>
+    </div>
+
+    <div class="chart-wrap" style="margin-bottom: 24px;">
+      <div class="section-title" style="margin-bottom: 14px;">월별 배당 추이와 목표선</div>
+      <canvas id="chartGoal"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title">진행 로그</div>
+        <button class="btn small btn-ghost" id="btnSnapshot">지금 스냅샷</button>
+      </div>
+      <p class="help" style="margin-top: 0;">매월 자동으로 진행 상태가 기록됩니다. 시간이 지날수록 목표에 얼마나 가까워지는지 추이가 쌓여요.</p>
+      <div id="progressInsight"></div>
+      <div class="chart-wrap" style="margin-top: 16px; border: 1px solid var(--border);">
+        <canvas id="chartProgress"></canvas>
+      </div>
+      <table style="margin-top: 16px;">
+        <thead><tr><th>날짜</th><th class="right">월평균 (₩)</th><th class="right">목표 (₩)</th><th class="right">달성률</th><th class="right">보유</th><th></th></tr></thead>
+        <tbody id="progressBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SIMULATOR -->
+  <section class="panel" id="panel-simulator">
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title">DRIP 시뮬레이션</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn small" id="btnLoadHoldings">현재 포트폴리오 불러오기</button>
+          <button class="btn small btn-ghost" id="btnClearPositions">초기화</button>
+        </div>
+      </div>
+      <p class="help">실제 보유 종목 기반으로 N년 후 자산가치와 월 배당을 추정합니다. 종목별로 보유 수량, 주당 배당, 성장률, <strong>월 추가 매수 주식 수</strong>를 조정해서 "이 종목을 매달 N주씩 더 사면 어떻게 될까?"를 비교할 수 있어요. 세금은 설정 탭의 세금 계산 여부를 따라갑니다.</p>
+      <div class="sim-form" style="grid-template-columns: 200px;">
+        <div class="field"><label>시뮬레이션 기간 (년)</label><input type="number" id="simYears" step="1" min="1" max="50" inputmode="numeric" /></div>
+      </div>
+    </div>
+
+    <div class="goal-hero sim-hero">
+      <div class="eyebrow" id="simEyebrow">N년 후 월 배당</div>
+      <div class="big"><span id="simBigKRW">₩0</span></div>
+      <div class="meta" id="simBigUSD" style="margin-top: 4px;">$0 / 월</div>
+      <div id="simGoalStatus" style="margin-top: 16px;"></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="label">최종 자산가치</div>
+        <div class="value display num"><span id="simStatValue">$0</span></div>
+        <div class="sub" id="simStatValueKRW">₩0</div>
+      </div>
+      <div class="stat">
+        <div class="label">DRIP 효과 vs 비DRIP</div>
+        <div class="value display num pos"><span id="simStatDrip">+$0</span></div>
+        <div class="sub pos" id="simStatDripKRW">+₩0</div>
+      </div>
+      <div class="stat">
+        <div class="label">누적 받은 배당</div>
+        <div class="value display num"><span id="simStatTotalDiv">$0</span></div>
+        <div class="sub" id="simStatTotalDivKRW">₩0</div>
+      </div>
+      <div class="stat">
+        <div class="label">총 투입금</div>
+        <div class="value display num"><span id="simStatInvested">$0</span></div>
+        <div class="sub" id="simStatInvestedKRW">₩0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div class="section-title">포지션 가정</div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span class="section-note"><span id="simPositionCount">0</span>개</span>
+          <button class="btn small btn-ghost" id="btnAddPosition">+ 종목 추가</button>
+        </div>
+      </div>
+      <div id="simPositions"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="chart-wrap">
+        <div class="section-title" style="margin-bottom: 14px;">자산가치 추이</div>
+        <canvas id="chartSimAsset"></canvas>
+      </div>
+      <div class="chart-wrap">
+        <div class="section-title" style="margin-bottom: 14px;">월 배당금 추이</div>
+        <canvas id="chartSimDiv"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-wrap" style="margin-top: 24px;">
+      <div class="section-title" style="margin-bottom: 14px;">종목별 최종 자산 기여도</div>
+      <canvas id="chartSimByTicker"></canvas>
+    </div>
+
+    <div class="card" style="margin-top: 24px;">
+      <div class="section-title" style="margin-bottom: 12px;">연도별 상세</div>
+      <table>
+        <thead><tr><th>년차</th><th class="right">자산 ($)</th><th class="right">자산 (₩)</th><th class="right">월 배당 (₩)</th><th class="right">누적 배당 ($)</th></tr></thead>
+        <tbody id="simTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- COACH -->
+  <section class="panel" id="panel-coach">
+    <div id="coachEmpty" class="card" style="display: none;">
+      <div style="padding: 40px 20px; text-align: center;">
+        <div style="font-size: 17px; font-weight: 600; margin-bottom: 8px;">아직 분석할 데이터가 부족해요</div>
+        <div class="muted" style="font-size: 13px;" id="coachEmptyDetail">매수 기록이 3건 이상 쌓이면 점수를 매겨드릴게요.</div>
+      </div>
+    </div>
+
+    <div id="coachContent" style="display: none;">
+      <div class="card coach-hero">
+        <div class="grade-block">
+          <div class="grade-letter" id="coachGrade">—</div>
+          <div class="grade-score" id="coachScore">—</div>
+        </div>
+        <div style="flex: 1;">
+          <div class="grade-summary" id="coachSummary"></div>
+          <div style="margin-top: 14px;">
+            <div class="seg" id="coachStyleSeg">
+              <button data-coach-style="accumulator">적립식</button>
+              <button data-coach-style="balanced">균형형</button>
+            </div>
+            <div class="help" id="coachStyleHelp" style="margin: 8px 0 0;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div class="section-title">카테고리별 점수</div>
+          <div class="section-note">가중평균으로 총점 계산</div>
+        </div>
+        <div id="coachCategories"></div>
+      </div>
+
+      <div class="card" id="coachReferences" style="display: none;">
+        <div class="section-title" style="margin-bottom: 8px;">참고 지표</div>
+        <p class="help" style="margin: 0 0 12px;">총점에는 반영되지 않지만 알아두면 좋아요.</p>
+        <div id="coachRefCategories"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom: 14px;">짚을 점</div>
+        <div id="coachFlags"></div>
+      </div>
+
+      <p class="help" style="text-align: center; margin-top: 20px;">분석은 매수 패턴 기반의 휴리스틱이에요. 투자 자문이 아니라 자기점검용 참고 지표입니다.</p>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="panel" id="panel-settings">
+    <div class="card" id="cardGistSync">
+      <div class="section-title" style="margin-bottom: 4px;">Gist 동기화</div>
+      <p class="help">
+        GitHub Personal Access Token으로 비공개 Gist에 데이터를 자동 저장합니다. 모든 디바이스에서 동기화돼요. 토큰은 이 브라우저에만 저장됩니다.
+      </p>
+      <details style="margin: 8px 0 12px;">
+        <summary style="cursor: pointer; font-size: 13px; color: var(--muted);">토큰 발급 방법 (처음이면 펼쳐보세요)</summary>
+        <div class="help" style="padding: 8px 0 0 16px;">
+          1. <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> 접속<br>
+          2. <code>Generate new token (classic)</code> 클릭<br>
+          3. Note: <code>Portfolio Journal</code> 등 적당히 입력<br>
+          4. Expiration: <code>No expiration</code> 권장 (또는 1년)<br>
+          5. Scopes: <code>gist</code> 체크박스만 선택<br>
+          6. <code>Generate token</code> 클릭하고 토큰 복사 → 아래 붙여넣기<br>
+          7. 첫 사용시 "새 Gist 만들기" 버튼 클릭하면 자동으로 Gist 생성
+        </div>
+      </details>
+      <div class="settings-row">
+        <div class="lbl">Personal Access Token</div>
+        <div class="val"><input type="password" id="inputGistToken" class="code-input" placeholder="ghp_..." /></div>
+      </div>
+      <div class="settings-row">
+        <div class="lbl">Gist ID</div>
+        <div class="val"><input type="text" id="inputGistId" class="code-input" placeholder="(첫 사용시 자동 생성)" /></div>
+      </div>
+      <div class="settings-row">
+        <div class="lbl">상태</div>
+        <div class="val" id="gistStatus"><span class="badge">미설정</span></div>
+      </div>
+      <div class="settings-row">
+        <div class="lbl">마지막 동기화</div>
+        <div class="val muted" id="gistLastSync" style="font-size: 13px;">—</div>
+      </div>
+      <div class="settings-row">
+        <div class="lbl">동작</div>
+        <div class="val">
+          <button class="btn small" id="btnGistSave">저장 & 연결</button>
+          <button class="btn small btn-ghost" id="btnGistCreate">새 Gist 만들기</button>
+          <button class="btn small btn-ghost" id="btnGistPull">지금 가져오기</button>
+          <button class="btn small btn-ghost" id="btnGistPush">지금 올리기</button>
+          <button class="btn small btn-ghost" id="btnGistClear" style="color: var(--negative);">연결 해제</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom: 4px;">세금 계산</div>
+      <p class="help">미국 주식 배당은 한미 조세협약에 따라 미국에서 15% 원천징수 후 입금됩니다. 활성화하면 모든 계산이 세후 기준으로 변환되고, 연도별 종합과세 임계값(2,000만원) 근접 여부도 알려줍니다.</p>
+      <div class="toggle-row">
+        <div class="toggle" id="toggleTax"></div>
+        <div>
+          <div style="font-weight: 500;">세금 계산 활성화</div>
+          <div class="help" style="margin: 2px 0 0;">배당 입력값이 세전(grossed up) 기준일 때 사용하세요</div>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="lbl">미국 원천징수율 (%)</div>
+        <div class="val"><input type="number" id="inputTaxRate" step="0.1" min="0" max="100" inputmode="decimal" /></div>
+      </div>
+      <div class="settings-row">
+        <div class="lbl">연 종합과세 임계값 (₩)</div>
+        <div class="val"><input type="number" id="inputTaxThreshold" step="1000000" min="0" inputmode="numeric" /></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom: 4px;">테마</div>
+      <div class="seg" id="themeSeg" style="margin-top: 8px;">
+        <button data-theme-pref="auto">자동</button>
+        <button data-theme-pref="light">라이트</button>
+        <button data-theme-pref="dark">다크</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom: 4px;">시세 조회 (Finnhub)</div>
+      <p class="help">무료 API 키를 넣으면 보유 종목의 현재가와 미실현 손익이 자동 계산됩니다. <a href="https://finnhub.io" target="_blank">finnhub.io</a>에서 무료 가입 후 키를 받으세요. 키는 디바이스에만 저장되고 Gist에 포함되지 않습니다.</p>
+      <div class="settings-row">
+        <div class="lbl">API 키</div>
+        <div class="val"><input type="password" id="inputFinnhubKey" class="code-input" placeholder="API key" /></div>
+      </div>
+      <div class="settings-row">
+        <div class="lbl">상태</div>
+        <div class="val" id="finnhubStatus"><span class="badge">미설정</span></div>
+      </div>
+      <div class="settings-row">
+        <div class="lbl">동작</div>
+        <div class="val">
+          <button class="btn small" id="btnSaveKey">저장</button>
+          <button class="btn small btn-ghost" id="btnTestKey">연결 테스트</button>
+          <button class="btn small btn-ghost" id="btnClearKey">키 삭제</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom: 4px;">즐겨찾기 관리</div>
+      <p class="help">자주 거래하는 티커를 별표 표시해두면 입력 폼에서 한 번 클릭으로 선택할 수 있어요.</p>
+      <div class="fav-manage" id="favManage"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom: 4px;">환율 설정</div>
+      <p class="help">Frankfurter API에서 자동으로 가져옵니다. 수동 입력하면 자동 갱신이 꺼집니다.</p>
+      <div class="settings-row"><div class="lbl">현재 환율 (USD → KRW)</div><div class="val"><input type="number" id="inputRate" step="0.01" min="0" inputmode="decimal" /></div></div>
+      <div class="settings-row"><div class="lbl">모드</div><div class="val"><span class="badge live" id="rateMode">자동</span> <button class="btn btn-ghost small" id="btnRateAuto" style="margin-left: 8px;">자동으로 되돌리기</button></div></div>
+      <div class="settings-row"><div class="lbl">마지막 갱신</div><div class="val muted" id="rateUpdated" style="font-size: 13px;">—</div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom: 4px;">데이터 관리</div>
+      <div class="settings-row"><div class="lbl">백업</div><div class="val"><button class="btn btn-ghost small" id="btnExport">JSON 다운로드</button></div></div>
+      <div class="settings-row"><div class="lbl">불러오기</div><div class="val"><input type="file" id="fileImport" accept="application/json" /></div></div>
+      <div class="settings-row"><div class="lbl">전체 삭제</div><div class="val"><button class="btn btn-ghost small" id="btnReset" style="color: var(--negative); border-color: var(--negative);">모든 기록 삭제</button></div></div>
+    </div>
+  </section>
+
+  <datalist id="tickerList"></datalist>
+
+  <div class="modal-backdrop" id="impulseModal">
+    <div class="modal">
+      <h3>⚠ 충동매수 확인</h3>
+      <div class="modal-body">
+        <p>이번 매수에서 아래 패턴이 감지됐어요:</p>
+        <ul id="impulseReasons"></ul>
+        <p class="help" style="margin: 0;">매수 전 24시간 정도 다시 생각해보는 건 어떨까요? 그래도 확신이 있다면 진행하세요.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="impulseCancel">취소</button>
+        <button class="btn danger" id="impulseProceed">그래도 진행</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   THEME
+   ============================================================ */
+const THEME_KEY = 'portfolio_theme';
+function getThemePref() { return localStorage.getItem(THEME_KEY) || 'auto'; }
+function applyTheme() {
+  const pref = getThemePref();
+  const effective = pref === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : pref;
+  document.documentElement.setAttribute('data-theme', effective);
+  document.getElementById('iconSun').style.display = effective === 'dark' ? '' : 'none';
+  document.getElementById('iconMoon').style.display = effective === 'dark' ? 'none' : '';
+  document.querySelectorAll('#themeSeg button').forEach(b => b.classList.toggle('active', b.dataset.themePref === pref));
+  setTimeout(() => refreshAll(), 0);
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (getThemePref() === 'auto') applyTheme(); });
+
+/* ============================================================
+   STORAGE
+   ============================================================ */
+const STORAGE_KEY = 'portfolio_journal_v5';
+const FINNHUB_KEY_STORAGE = 'portfolio_finnhub_key';
+const PRICE_CACHE_KEY = 'portfolio_price_cache';
+const GIST_TOKEN_KEY = 'portfolio_gist_token';
+const GIST_ID_KEY = 'portfolio_gist_id';
+const GIST_FILENAME = 'portfolio.json';
+
+const DEFAULT_STATE = {
+  purchases: [], sells: [], dividends: [], favorites: [],
+  progressLog: [],
+  goal: { monthlyKRW: 1000000, yieldPct: 4.0 },
+  tax: { enabled: false, withholdingPct: 15.0, annualThresholdKRW: 20000000 },
+  coach: { style: 'accumulator' },
+  simulation: { years: 20, positions: [] },
+  rate: { value: 1350, manual: false, updatedAt: null },
+  updatedAt: null
+};
+
+function normalizeState(data) {
+  return {
+    ...DEFAULT_STATE, ...data,
+    favorites: Array.isArray(data.favorites) ? data.favorites : [],
+    progressLog: Array.isArray(data.progressLog) ? data.progressLog : [],
+    goal: { ...DEFAULT_STATE.goal, ...(data.goal || {}) },
+    tax: { ...DEFAULT_STATE.tax, ...(data.tax || {}) },
+    coach: { ...DEFAULT_STATE.coach, ...(data.coach || {}) },
+    simulation: { ...DEFAULT_STATE.simulation, ...(data.simulation || {}), positions: Array.isArray(data.simulation?.positions) ? data.simulation.positions : [] },
+    rate: { ...DEFAULT_STATE.rate, ...(data.rate || {}) }
+  };
+}
+
+function loadStore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      for (const oldKey of ['portfolio_journal_v3', 'portfolio_journal_v2', 'portfolio_journal_v1']) {
+        const old = localStorage.getItem(oldKey);
+        if (old) {
+          const data = normalizeState(JSON.parse(old));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          return data;
+        }
+      }
+      return JSON.parse(JSON.stringify(DEFAULT_STATE));
+    }
+    return normalizeState(JSON.parse(raw));
+  } catch (e) { return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
+}
+
+let _saveGistTimer = null;
+function saveStore(data, options = {}) {
+  data.updatedAt = new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  if (options.skipSync) return;
+  if (_saveGistTimer) clearTimeout(_saveGistTimer);
+  _saveGistTimer = setTimeout(() => { gistPushData(data).catch(e => console.warn('gist push failed', e)); }, 1500);
+}
+
+/* ============================================================
+   GIST SYNC
+   ============================================================ */
+let lastGistSync = null;
+let gistSyncing = false;
+
+function getGistToken() { return localStorage.getItem(GIST_TOKEN_KEY) || ''; }
+function getGistId() { return localStorage.getItem(GIST_ID_KEY) || ''; }
+function hasGistConfig() { return !!(getGistToken() && getGistId()); }
+
+async function gistApi(method, path, body) {
+  const token = getGistToken();
+  if (!token) throw new Error('토큰이 없어요');
+  const opts = {
+    method,
+    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+  };
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const r = await fetch(`https://api.github.com${path}`, opts);
+  if (!r.ok) {
+    let msg = `GitHub API ${r.status}`;
+    try { const t = await r.json(); if (t.message) msg += `: ${t.message}`; } catch {}
+    throw new Error(msg);
+  }
+  return r.json();
+}
+
+async function gistFetchData() {
+  if (!hasGistConfig()) return null;
+  gistSyncing = true; updateSyncUI();
+  try {
+    const data = await gistApi('GET', `/gists/${getGistId()}`);
+    const file = data.files[GIST_FILENAME] || Object.values(data.files)[0];
+    if (!file) return null;
+    let content = file.content;
+    if (file.truncated && file.raw_url) {
+      const r = await fetch(file.raw_url);
+      content = await r.text();
+    }
+    if (!content || !content.trim()) return null;
+    return normalizeState(JSON.parse(content));
+  } finally { gistSyncing = false; updateSyncUI(); }
+}
+
+async function gistPushData(data) {
+  if (!hasGistConfig()) return;
+  gistSyncing = true; updateSyncUI();
+  try {
+    await gistApi('PATCH', `/gists/${getGistId()}`, {
+      files: { [GIST_FILENAME]: { content: JSON.stringify(data, null, 2) } }
+    });
+    lastGistSync = new Date();
+    updateSyncUI();
+  } catch (e) {
+    console.warn('gist push failed', e);
+    updateSyncUI('error', e.message);
+    throw e;
+  } finally { gistSyncing = false; }
+}
+
+async function gistCreate() {
+  if (!getGistToken()) throw new Error('토큰을 먼저 입력하세요');
+  const data = await gistApi('POST', '/gists', {
+    description: 'Portfolio Journal data',
+    public: false,
+    files: { [GIST_FILENAME]: { content: JSON.stringify(loadStore(), null, 2) } }
+  });
+  localStorage.setItem(GIST_ID_KEY, data.id);
+  lastGistSync = new Date();
+  return data.id;
+}
+
+async function initGistSync() {
+  if (!hasGistConfig()) { updateSyncUI(); return; }
+  try {
+    const remote = await gistFetchData();
+    if (remote) {
+      const local = loadStore();
+      const localTime = local.updatedAt ? new Date(local.updatedAt).getTime() : 0;
+      const remoteTime = remote.updatedAt ? new Date(remote.updatedAt).getTime() : 0;
+      if (remoteTime > localTime) {
+        // Remote wins
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(remote));
+        lastGistSync = new Date();
+      } else if (localTime > remoteTime) {
+        await gistPushData(local);
+      } else {
+        lastGistSync = new Date();
+      }
+    } else {
+      // Empty gist, push local
+      await gistPushData(loadStore());
+    }
+    updateSyncUI();
+  } catch (e) {
+    console.warn('gist init failed', e);
+    updateSyncUI('error', e.message);
+  }
+}
+
+async function checkRemoteUpdates() {
+  if (!hasGistConfig() || gistSyncing) return false;
+  try {
+    const remote = await gistFetchData();
+    if (!remote) return false;
+    const local = loadStore();
+    const localTime = local.updatedAt ? new Date(local.updatedAt).getTime() : 0;
+    const remoteTime = remote.updatedAt ? new Date(remote.updatedAt).getTime() : 0;
+    if (remoteTime > localTime) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(remote));
+      lastGistSync = new Date();
+      await refreshAll();
+      renderFavManage();
+      return true;
+    }
+    return false;
+  } catch (e) { console.warn(e); return false; }
+}
+
+function updateSyncUI(state, msg) {
+  const banner = document.getElementById('syncBanner');
+  const text = banner.querySelector('span:not(.sync-dot)');
+  const actions = document.getElementById('syncActions');
+  const dot = banner.querySelector('.sync-dot');
+  const gistStatus = document.getElementById('gistStatus');
+  const gistLastSync = document.getElementById('gistLastSync');
+
+  if (state === 'error') {
+    banner.className = 'sync-banner disconnected';
+    dot.className = 'sync-dot amber';
+    text.textContent = `동기화 오류: ${msg || '알 수 없는 오류'}`;
+    actions.innerHTML = '<button class="btn small" id="btnGoToSync2">설정 확인</button>';
+    document.getElementById('btnGoToSync2').onclick = () => switchTab('settings');
+    if (gistStatus) gistStatus.innerHTML = `<span class="badge warn">오류</span>`;
+    return;
+  }
+
+  if (gistSyncing) {
+    banner.className = 'sync-banner syncing';
+    dot.className = 'sync-dot gray pulse';
+    text.textContent = '동기화 중...';
+    actions.innerHTML = '';
+    return;
+  }
+
+  if (hasGistConfig()) {
+    banner.className = 'sync-banner connected';
+    dot.className = 'sync-dot green';
+    const gistShort = getGistId().slice(0, 7);
+    text.innerHTML = `Gist 동기화 중 <span style="font-family: 'JetBrains Mono'; opacity: 0.7;">(${gistShort})</span> · 마지막: ${lastGistSync ? lastGistSync.toLocaleTimeString('ko-KR') : '—'}`;
+    actions.innerHTML = '<button class="btn small btn-ghost" id="btnSyncNow">새로고침</button>';
+    document.getElementById('btnSyncNow').onclick = () => checkRemoteUpdates();
+    if (gistStatus) gistStatus.innerHTML = `<span class="badge live">연결됨</span>`;
+    if (gistLastSync) gistLastSync.textContent = lastGistSync ? lastGistSync.toLocaleString('ko-KR') : '—';
+  } else {
+    banner.className = 'sync-banner disconnected';
+    dot.className = 'sync-dot amber';
+    text.textContent = 'Gist 동기화가 설정되지 않았어요. localStorage에만 저장됩니다.';
+    actions.innerHTML = '<button class="btn small" id="btnGoToSync">설정하기</button>';
+    document.getElementById('btnGoToSync').onclick = () => switchTab('settings');
+    if (gistStatus) gistStatus.innerHTML = '<span class="badge">미설정</span>';
+    if (gistLastSync) gistLastSync.textContent = '—';
+  }
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+  if (name === 'settings') { renderFavManage(); document.getElementById('cardGistSync').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+}
+
+// Window focus - check for remote updates
+let lastFocusCheck = 0;
+window.addEventListener('focus', () => {
+  const now = Date.now();
+  if (now - lastFocusCheck < 5000) return;
+  lastFocusCheck = now;
+  checkRemoteUpdates();
+});
+
+/* ============================================================
+   PRICE FETCHING (Finnhub)
+   ============================================================ */
+const PRICE_TTL_MS = 5 * 60 * 1000;
+let priceCache = {};
+let pricesUpdatedAt = null;
+
+function loadPriceCache() {
+  try {
+    const raw = localStorage.getItem(PRICE_CACHE_KEY);
+    if (raw) { const data = JSON.parse(raw); priceCache = data.prices || {}; pricesUpdatedAt = data.updatedAt ? new Date(data.updatedAt) : null; }
+  } catch (e) {}
+}
+function savePriceCache() { localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({ prices: priceCache, updatedAt: pricesUpdatedAt })); }
+function getFinnhubKey() { return localStorage.getItem(FINNHUB_KEY_STORAGE) || ''; }
+function hasFinnhubKey() { return !!getFinnhubKey(); }
+
+async function fetchQuote(sym) {
+  const key = getFinnhubKey();
+  if (!key) return null;
+  try {
+    const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${encodeURIComponent(key)}`);
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d.c || d.c === 0) return null;
+    return { price: d.c, change: d.d, changePct: d.dp, prevClose: d.pc };
+  } catch (e) { return null; }
+}
+
+async function refreshPrices(symbols, force = false) {
+  if (!hasFinnhubKey()) { updatePriceStatusUI(); return; }
+  const now = Date.now();
+  const toFetch = [];
+  for (const s of symbols) {
+    const cached = priceCache[s];
+    if (!force && cached && now - cached.fetchedAt < PRICE_TTL_MS) continue;
+    toFetch.push(s);
+  }
+  if (toFetch.length === 0) { updatePriceStatusUI(); return; }
+  for (const s of toFetch) {
+    const q = await fetchQuote(s);
+    if (q) priceCache[s] = { ...q, fetchedAt: now };
+  }
+  pricesUpdatedAt = new Date();
+  savePriceCache();
+  updatePriceStatusUI();
+}
+
+function updatePriceStatusUI() {
+  const status = document.getElementById('priceStatus');
+  if (!hasFinnhubKey()) { status.style.display = 'none'; return; }
+  status.style.display = '';
+  document.getElementById('priceUpdated').textContent = pricesUpdatedAt ? pricesUpdatedAt.toLocaleTimeString('ko-KR') : '—';
+}
+function updateFinnhubStatusUI() {
+  const el = document.getElementById('finnhubStatus');
+  const input = document.getElementById('inputFinnhubKey');
+  if (hasFinnhubKey()) { el.innerHTML = '<span class="badge live">설정됨</span>'; input.value = '••••••••'; }
+  else { el.innerHTML = '<span class="badge">미설정</span>'; input.value = ''; }
+}
+
+/* ============================================================
+   API LAYER
+   ============================================================ */
+const api = {
+  async getPurchases() { return loadStore().purchases; },
+  async getSells() { return loadStore().sells; },
+  async getDividends() { return loadStore().dividends; },
+  async getFavorites() { return loadStore().favorites; },
+  async getGoal() { return loadStore().goal; },
+  async getRate() { return loadStore().rate; },
+  async getTax() { return loadStore().tax; },
+  async getProgressLog() { return loadStore().progressLog; },
+  async getSimulation() { return loadStore().simulation; },
+  async saveSimulation(sim) { const s = loadStore(); s.simulation = { ...s.simulation, ...sim }; saveStore(s); },
+  async getCoachStyle() { return (loadStore().coach || {}).style || 'accumulator'; },
+  async saveCoachStyle(style) { const s = loadStore(); s.coach = { ...(s.coach || {}), style }; saveStore(s); },
+  async addPurchase(p) { const s = loadStore(); s.purchases.push({ id: crypto.randomUUID(), ...p }); saveStore(s); },
+  async addSell(p) { const s = loadStore(); s.sells.push({ id: crypto.randomUUID(), ...p }); saveStore(s); },
+  async updatePurchase(id, data) { const s = loadStore(); const i = s.purchases.findIndex(p => p.id === id); if (i >= 0) { s.purchases[i] = { ...s.purchases[i], ...data }; saveStore(s); } },
+  async updateSell(id, data) { const s = loadStore(); const i = s.sells.findIndex(p => p.id === id); if (i >= 0) { s.sells[i] = { ...s.sells[i], ...data }; saveStore(s); } },
+  async deletePurchase(id) { const s = loadStore(); s.purchases = s.purchases.filter(p => p.id !== id); saveStore(s); },
+  async deleteSell(id) { const s = loadStore(); s.sells = s.sells.filter(p => p.id !== id); saveStore(s); },
+  async addDividend(d) { const s = loadStore(); s.dividends.push({ id: crypto.randomUUID(), ...d }); saveStore(s); },
+  async updateDividend(id, data) { const s = loadStore(); const i = s.dividends.findIndex(d => d.id === id); if (i >= 0) { s.dividends[i] = { ...s.dividends[i], ...data }; saveStore(s); } },
+  async deleteDividend(id) { const s = loadStore(); s.dividends = s.dividends.filter(d => d.id !== id); saveStore(s); },
+  async toggleFavorite(sym) { const s = loadStore(); const t = sym.toUpperCase(); const i = s.favorites.indexOf(t); if (i >= 0) s.favorites.splice(i, 1); else s.favorites.push(t); saveStore(s); },
+  async removeFavorite(sym) { const s = loadStore(); s.favorites = s.favorites.filter(f => f !== sym.toUpperCase()); saveStore(s); },
+  async saveGoal(goal) { const s = loadStore(); s.goal = { ...s.goal, ...goal }; saveStore(s); },
+  async saveTax(tax) { const s = loadStore(); s.tax = { ...s.tax, ...tax }; saveStore(s); },
+  async saveRate(rate) { const s = loadStore(); s.rate = { ...s.rate, ...rate }; saveStore(s); },
+  async addSnapshot(snap) { const s = loadStore(); s.progressLog.push({ id: crypto.randomUUID(), ...snap }); saveStore(s); },
+  async deleteSnapshot(id) { const s = loadStore(); s.progressLog = s.progressLog.filter(p => p.id !== id); saveStore(s); },
+  async exportAll() { return loadStore(); },
+  async importAll(data) { saveStore(normalizeState(data)); },
+  async reset() { localStorage.removeItem(STORAGE_KEY); }
+};
+
+/* ============================================================
+   FORMATTING
+   ============================================================ */
+let CURRENT_RATE = 1350;
+const fmtUSD = (n) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtUSD0 = (n) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+const fmtKRW = (usd) => '₩' + Math.round((Number(usd) || 0) * CURRENT_RATE).toLocaleString('ko-KR');
+const fmtKRWraw = (krw) => '₩' + Math.round(Number(krw) || 0).toLocaleString('ko-KR');
+const fmtNum = (n, d = 4) => (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: d });
+const fmtPct = (n) => (Number(n) || 0).toFixed(2) + '%';
+const fmtPctSigned = (n) => (n >= 0 ? '+' : '') + (Number(n) || 0).toFixed(2) + '%';
+const fmtDate = (s) => s || '';
+const signedUSD = (n) => (n >= 0 ? '+' : '−') + fmtUSD(Math.abs(n));
+const signedKRW = (n) => (n >= 0 ? '+' : '−') + fmtKRW(Math.abs(n));
+
+/* ============================================================
+   TAX HELPERS
+   ============================================================ */
+function taxRate() {
+  const s = loadStore();
+  return s.tax?.enabled ? (s.tax.withholdingPct / 100) : 0;
+}
+function netUSD(gross) { return gross * (1 - taxRate()); }
+function taxUSD(gross) { return gross * taxRate(); }
+
+/* ============================================================
+   COMPUTATION
+   ============================================================ */
+async function computeHoldings() {
+  const [purchases, sells, dividends] = await Promise.all([api.getPurchases(), api.getSells(), api.getDividends()]);
+  const map = new Map();
+  const ensure = (sym) => { if (!map.has(sym)) map.set(sym, { symbol: sym, buyShares: 0, buyCost: 0, sellShares: 0, sellProceeds: 0, dividendsGross: 0 }); return map.get(sym); };
+  for (const p of purchases) { const h = ensure(p.symbol.toUpperCase()); h.buyShares += Number(p.shares); h.buyCost += Number(p.shares) * Number(p.price); }
+  for (const s of sells) { const h = ensure(s.symbol.toUpperCase()); h.sellShares += Number(s.shares); h.sellProceeds += Number(s.shares) * Number(s.price); }
+  for (const d of dividends) { const h = ensure(d.symbol.toUpperCase()); h.dividendsGross += Number(d.amount); }
+  const result = [];
+  const tr = taxRate();
+  for (const h of map.values()) {
+    const avgBuy = h.buyShares > 0 ? h.buyCost / h.buyShares : 0;
+    const heldShares = h.buyShares - h.sellShares;
+    const heldCost = Math.max(0, heldShares) * avgBuy;
+    const realizedPL = h.sellProceeds - (h.sellShares * avgBuy);
+    const dividends = h.dividendsGross * (1 - tr);
+    const quote = priceCache[h.symbol];
+    const currentPrice = quote ? quote.price : null;
+    const currentValue = (currentPrice && heldShares > 0) ? heldShares * currentPrice : null;
+    const unrealizedPL = (currentValue !== null) ? currentValue - heldCost : null;
+    const unrealizedPct = (unrealizedPL !== null && heldCost > 0) ? (unrealizedPL / heldCost) * 100 : null;
+    result.push({ symbol: h.symbol, heldShares, avgBuy, heldCost, currentPrice, currentValue, unrealizedPL, unrealizedPct, dividends, dividendsGross: h.dividendsGross, realizedPL });
+  }
+  return result.filter(h => h.heldShares > 0.0001 || h.dividendsGross > 0 || Math.abs(h.realizedPL) > 0.005)
+               .sort((a, b) => (b.currentValue || b.heldCost) - (a.currentValue || a.heldCost));
+}
+
+function aggregateMonthly(dividends, monthsBack = 12, applyTax = false) {
+  const months = []; const today = new Date(); const tr = applyTax ? taxRate() : 0;
+  for (let i = monthsBack - 1; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    months.push({ key, label: (d.getMonth() + 1) + '월', total: 0 });
+  }
+  for (const d of dividends) {
+    const key = (d.date || '').slice(0, 7);
+    const m = months.find(x => x.key === key);
+    if (m) m.total += Number(d.amount) * (1 - tr);
+  }
+  return months;
+}
+
+function getAnnualDividendSummary(dividends) {
+  const tr = taxRate();
+  const byYear = new Map();
+  for (const d of dividends) {
+    const year = (d.date || '').slice(0, 4);
+    if (!year) continue;
+    if (!byYear.has(year)) byYear.set(year, { gross: 0, tax: 0, net: 0 });
+    const y = byYear.get(year);
+    const g = Number(d.amount); y.gross += g;
+    y.tax += g * tr; y.net += g * (1 - tr);
+  }
+  return Array.from(byYear.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+}
+
+/* ============================================================
+   PROGRESS LOG
+   ============================================================ */
+async function takeSnapshot(auto = false) {
+  const s = loadStore();
+  const now = new Date();
+  const thisMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  if (auto && s.progressLog.some(p => (p.date || '').startsWith(thisMonth))) return false;
+
+  const dividends = s.dividends;
+  const months12 = aggregateMonthly(dividends, 12, true);
+  const avg12USD = months12.reduce((sum, m) => sum + m.total, 0) / 12;
+  const holdings = await computeHoldings();
+  const heldCount = holdings.filter(h => h.heldShares > 0.0001).length;
+  const invested = holdings.reduce((sum, h) => sum + h.heldCost, 0);
+
+  const snapshot = {
+    id: crypto.randomUUID(),
+    date: now.toISOString().slice(0, 10),
+    avgMonthlyUSD: Number(avg12USD.toFixed(2)),
+    avgMonthlyKRW: Math.round(avg12USD * CURRENT_RATE),
+    targetKRW: Number(s.goal.monthlyKRW),
+    rate: CURRENT_RATE,
+    holdings: heldCount,
+    invested: Math.round(invested),
+    taxApplied: !!s.tax?.enabled,
+    auto
+  };
+  s.progressLog.push(snapshot);
+  saveStore(s);
+  return true;
+}
+
+function computeProgressInsight(log, targetKRW) {
+  if (log.length < 2) return null;
+  const sorted = log.slice().sort((a, b) => a.date.localeCompare(b.date));
+  const latest = sorted[sorted.length - 1];
+  // 12 months ago comparison
+  const oneYearAgo = sorted.find(s => {
+    const diff = (new Date(latest.date) - new Date(s.date)) / (1000 * 60 * 60 * 24);
+    return diff >= 330 && diff <= 400;
+  });
+  // Recent pace (last 3 snapshots)
+  let pace = null;
+  if (sorted.length >= 3) {
+    const recent = sorted.slice(-3);
+    const monthsDiff = ((new Date(recent[recent.length - 1].date) - new Date(recent[0].date)) / (1000 * 60 * 60 * 24 * 30.4));
+    if (monthsDiff > 0) {
+      pace = (recent[recent.length - 1].avgMonthlyKRW - recent[0].avgMonthlyKRW) / monthsDiff;
+    }
+  } else if (sorted.length >= 2) {
+    const monthsDiff = ((new Date(sorted[sorted.length - 1].date) - new Date(sorted[0].date)) / (1000 * 60 * 60 * 24 * 30.4));
+    if (monthsDiff > 0) {
+      pace = (sorted[sorted.length - 1].avgMonthlyKRW - sorted[0].avgMonthlyKRW) / monthsDiff;
+    }
+  }
+  return {
+    latest, oneYearAgo, pace,
+    yoyChange: oneYearAgo ? latest.avgMonthlyKRW - oneYearAgo.avgMonthlyKRW : null,
+    yoyPct: oneYearAgo && oneYearAgo.avgMonthlyKRW > 0 ? ((latest.avgMonthlyKRW - oneYearAgo.avgMonthlyKRW) / oneYearAgo.avgMonthlyKRW) * 100 : null,
+    monthsToTarget: pace && pace > 0 ? (targetKRW - latest.avgMonthlyKRW) / pace : null
+  };
+}
+
+/* ============================================================
+   DRIP SIMULATION (per-position based on actual holdings)
+   ============================================================ */
+function runSimulation(positions, years, tr) {
+  const netFactor = 1 - tr;
+  const state = positions.map(p => ({
+    symbol: p.symbol,
+    sharesA: Number(p.shares) || 0,
+    sharesB: Number(p.shares) || 0,
+    price: Number(p.currentPrice) || 0,
+    divPerShare: Number(p.divPerShare) || 0,
+    monthlyBuy: Number(p.monthlyBuy) || 0,
+    mPriceGrowth: Math.pow(1 + (Number(p.priceGrowthPct) || 0) / 100, 1/12) - 1,
+    mDivGrowth: Math.pow(1 + (Number(p.divGrowthPct) || 0) / 100, 1/12) - 1,
+    cumDivA: 0, cumDivB: 0,
+    cashInvested: (Number(p.shares) || 0) * (Number(p.currentPrice) || 0) // initial
+  }));
+  const yearly = [];
+  const totalMonths = Math.max(1, years * 12);
+  for (let m = 1; m <= totalMonths; m++) {
+    for (const s of state) {
+      if (s.monthlyBuy > 0 && s.price > 0) {
+        s.sharesA += s.monthlyBuy;
+        s.sharesB += s.monthlyBuy;
+        s.cashInvested += s.monthlyBuy * s.price;
+      }
+      const monthlyDivPerShare = s.divPerShare / 12;
+      const divA = s.sharesA * monthlyDivPerShare * netFactor;
+      const divB = s.sharesB * monthlyDivPerShare * netFactor;
+      s.cumDivA += divA;
+      s.cumDivB += divB;
+      if (s.price > 0) s.sharesA += divA / s.price;
+      s.price *= (1 + s.mPriceGrowth);
+      s.divPerShare *= (1 + s.mDivGrowth);
+    }
+    if (m % 12 === 0) {
+      const t = { year: m / 12, assetValueA: 0, assetValueB: 0, annualDividendA: 0, annualDividendB: 0, cumDividendsA: 0, cumDividendsB: 0, totalCashInvested: 0, byTicker: [] };
+      for (const s of state) {
+        const av = s.sharesA * s.price;
+        const ad = s.sharesA * s.divPerShare * netFactor;
+        t.assetValueA += av;
+        t.assetValueB += s.sharesB * s.price;
+        t.annualDividendA += ad;
+        t.annualDividendB += s.sharesB * s.divPerShare * netFactor;
+        t.cumDividendsA += s.cumDivA;
+        t.cumDividendsB += s.cumDivB;
+        t.totalCashInvested += s.cashInvested;
+        t.byTicker.push({ symbol: s.symbol, assetValue: av, annualDividend: ad, shares: s.sharesA });
+      }
+      t.totalWealthB = t.assetValueB + t.cumDividendsB;
+      yearly.push(t);
+    }
+  }
+  return yearly;
+}
+
+let chartSimAsset, chartSimDiv, chartSimByTicker;
+
+function estimateTtmDividendForSymbol(symbol) {
+  const s = loadStore();
+  const sym = symbol.toUpperCase();
+  const today = new Date();
+  const yearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+  return s.dividends.filter(d => d.symbol.toUpperCase() === sym && d.date && new Date(d.date) >= yearAgo)
+    .reduce((sum, d) => sum + Number(d.amount), 0);
+}
+
+async function renderSimulation() {
+  await renderSimPositions();
+  await renderSimResults();
+}
+
+async function renderSimPositions() {
+  const sim = await api.getSimulation();
+  document.getElementById('simYears').value = sim.years;
+  document.getElementById('simPositionCount').textContent = sim.positions.length;
+  const container = document.getElementById('simPositions');
+  if (sim.positions.length === 0) {
+    container.innerHTML = '<div class="position-empty">아직 포지션이 없어요. "현재 포트폴리오 불러오기"를 누르거나 "+ 종목 추가"로 직접 추가하세요.</div>';
+    return;
+  }
+  container.innerHTML = sim.positions.map((p, idx) => {
+    const summary = `${fmtNum(p.shares, 4)}주 × ${fmtUSD(p.currentPrice)} = ${fmtUSD0(p.shares * p.currentPrice)}`;
+    return `<div class="position-card">
+      <div class="position-head">
+        <div>
+          <div class="position-ticker">${p.symbol}</div>
+          <div class="position-summary">${summary}</div>
+        </div>
+        <button class="btn-icon" data-remove-pos="${idx}">삭제</button>
+      </div>
+      <div class="position-grid">
+        <div class="field"><label>보유 주식 수</label><input type="number" data-pos-idx="${idx}" data-pos-field="shares" value="${p.shares}" step="0.0001" min="0" inputmode="decimal" /></div>
+        <div class="field"><label>현재가 ($)</label><input type="number" data-pos-idx="${idx}" data-pos-field="currentPrice" value="${p.currentPrice}" step="0.01" min="0" inputmode="decimal" /></div>
+        <div class="field"><label>주당 연 배당 ($)</label><input type="number" data-pos-idx="${idx}" data-pos-field="divPerShare" value="${p.divPerShare}" step="0.01" min="0" inputmode="decimal" /></div>
+        <div class="field"><label>배당 성장률 (%/년)</label><input type="number" data-pos-idx="${idx}" data-pos-field="divGrowthPct" value="${p.divGrowthPct}" step="0.5" min="0" inputmode="decimal" /></div>
+        <div class="field"><label>주가 성장률 (%/년)</label><input type="number" data-pos-idx="${idx}" data-pos-field="priceGrowthPct" value="${p.priceGrowthPct}" step="0.5" min="0" inputmode="decimal" /></div>
+        <div class="field"><label>월 추가 매수 (주)</label><input type="number" data-pos-idx="${idx}" data-pos-field="monthlyBuy" value="${p.monthlyBuy || 0}" step="0.1" min="0" inputmode="decimal" /></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function renderSimResults() {
+  const sim = await api.getSimulation();
+  const goal = await api.getGoal();
+  const result = runSimulation(sim.positions || [], sim.years, taxRate());
+  if (result.length === 0) {
+    // Empty state
+    document.getElementById('simEyebrow').textContent = `${sim.years || 20}년 후 월 배당`;
+    document.getElementById('simBigKRW').textContent = '₩0';
+    document.getElementById('simBigUSD').textContent = '$0 / 월';
+    document.getElementById('simGoalStatus').innerHTML = '<div class="insight warn">포지션을 추가하면 시뮬레이션 결과가 표시됩니다.</div>';
+    ['simStatValue', 'simStatDrip', 'simStatTotalDiv', 'simStatInvested'].forEach(id => document.getElementById(id).textContent = '—');
+    ['simStatValueKRW', 'simStatDripKRW', 'simStatTotalDivKRW', 'simStatInvestedKRW'].forEach(id => document.getElementById(id).textContent = '');
+    document.getElementById('simTableBody').innerHTML = '';
+    if (chartSimAsset) { chartSimAsset.destroy(); chartSimAsset = null; }
+    if (chartSimDiv) { chartSimDiv.destroy(); chartSimDiv = null; }
+    if (chartSimByTicker) { chartSimByTicker.destroy(); chartSimByTicker = null; }
+    return;
+  }
+  const final = result[result.length - 1];
+  const goalAnnualUSD = (Number(goal.monthlyKRW) || 0) / CURRENT_RATE * 12;
+  const goalIdx = goalAnnualUSD > 0 ? result.findIndex(y => y.annualDividendA >= goalAnnualUSD) : -1;
+  const goalReachedYear = goalIdx >= 0 ? result[goalIdx].year : null;
+
+  document.getElementById('simEyebrow').textContent = `${sim.years}년 후 월 배당`;
+  const finalMonthlyUSD = final.annualDividendA / 12;
+  document.getElementById('simBigKRW').textContent = fmtKRW(finalMonthlyUSD);
+  document.getElementById('simBigUSD').textContent = fmtUSD(finalMonthlyUSD) + ' / 월' + (taxRate() > 0 ? ' (세후)' : '');
+
+  const goalEl = document.getElementById('simGoalStatus');
+  if (goalReachedYear !== null) {
+    goalEl.className = 'insight';
+    goalEl.innerHTML = `🎉 월 배당 ${fmtKRWraw(goal.monthlyKRW)} 달성: <strong>${goalReachedYear}년 후</strong>`;
+  } else if (goal.monthlyKRW > 0) {
+    goalEl.className = 'insight warn';
+    goalEl.innerHTML = `시뮬레이션 기간 내 ${fmtKRWraw(goal.monthlyKRW)} 도달 어려움. 월 매수량을 늘리거나 기간을 더 늘려보세요.`;
+  } else { goalEl.innerHTML = ''; }
+
+  document.getElementById('simStatValue').textContent = fmtUSD0(final.assetValueA);
+  document.getElementById('simStatValueKRW').textContent = fmtKRW(final.assetValueA);
+  const dripAdvantage = final.assetValueA - final.totalWealthB;
+  document.getElementById('simStatDrip').textContent = (dripAdvantage >= 0 ? '+' : '') + fmtUSD0(dripAdvantage);
+  document.getElementById('simStatDripKRW').textContent = (dripAdvantage >= 0 ? '+' : '') + fmtKRW(dripAdvantage);
+  document.getElementById('simStatTotalDiv').textContent = fmtUSD0(final.cumDividendsA);
+  document.getElementById('simStatTotalDivKRW').textContent = fmtKRW(final.cumDividendsA);
+  document.getElementById('simStatInvested').textContent = fmtUSD0(final.totalCashInvested);
+  document.getElementById('simStatInvestedKRW').textContent = fmtKRW(final.totalCashInvested);
+
+  const c = chartColors();
+  const labels = result.map(y => y.year + '년');
+
+  if (chartSimAsset) chartSimAsset.destroy();
+  chartSimAsset = new Chart(document.getElementById('chartSimAsset'), {
+    data: {
+      labels,
+      datasets: [
+        { type: 'line', label: 'DRIP (자산)', data: result.map(y => y.assetValueA), borderColor: c.accent, backgroundColor: c.accent + '22', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0 },
+        { type: 'line', label: '비DRIP (자산+배당현금)', data: result.map(y => y.totalWealthB), borderColor: c.muted, borderWidth: 2, borderDash: [4, 4], fill: false, pointRadius: 0 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12 } }, tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ' + fmtUSD0(ctx.parsed.y) } } },
+      scales: { x: { grid: { display: false }, border: { color: c.border } }, y: { grid: { color: c.border }, border: { display: false }, ticks: { callback: v => '$' + (v / 1000).toFixed(0) + 'k' } } }
+    }
+  });
+
+  if (chartSimDiv) chartSimDiv.destroy();
+  const targetMonthlyKRW = Number(goal.monthlyKRW) || 0;
+  chartSimDiv = new Chart(document.getElementById('chartSimDiv'), {
+    data: {
+      labels,
+      datasets: [
+        { type: 'bar', label: '월 배당 (₩)', data: result.map(y => y.annualDividendA / 12 * CURRENT_RATE), backgroundColor: c.accent, borderRadius: 3, maxBarThickness: 24, order: 2 },
+        { type: 'line', label: '목표 (₩)', data: result.map(() => targetMonthlyKRW), borderColor: c.warn, borderWidth: 2, borderDash: [4, 4], pointRadius: 0, fill: false, order: 1 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12 } }, tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ' + fmtKRWraw(ctx.parsed.y) } } },
+      scales: { x: { grid: { display: false }, border: { color: c.border } }, y: { grid: { color: c.border }, border: { display: false }, ticks: { callback: v => '₩' + (v / 10000).toFixed(0) + '만' } } }
+    }
+  });
+
+  // By-ticker contribution chart
+  if (chartSimByTicker) chartSimByTicker.destroy();
+  const byTicker = (final.byTicker || []).slice().sort((a, b) => b.assetValue - a.assetValue);
+  chartSimByTicker = new Chart(document.getElementById('chartSimByTicker'), {
+    type: 'bar',
+    data: {
+      labels: byTicker.map(t => t.symbol),
+      datasets: [
+        { label: '최종 자산 ($)', data: byTicker.map(t => t.assetValue), backgroundColor: c.accent, borderRadius: 3, maxBarThickness: 32 }
+      ]
+    },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => fmtUSD0(ctx.parsed.x) + ' · 월 배당 ' + fmtKRW(byTicker[ctx.dataIndex].annualDividend / 12) } } },
+      scales: { x: { grid: { color: c.border }, border: { display: false }, ticks: { callback: v => '$' + (v / 1000).toFixed(0) + 'k' } }, y: { grid: { display: false }, border: { color: c.border }, ticks: { font: { family: "'JetBrains Mono', monospace" } } } }
+    }
+  });
+
+  const tbody = document.getElementById('simTableBody');
+  tbody.innerHTML = result.map(y => `<tr>
+    <td class="ticker-cell" data-label="">${y.year}년</td>
+    <td class="right num" data-label="자산 ($)">${fmtUSD0(y.assetValueA)}</td>
+    <td class="right num muted" data-label="자산 (₩)">${fmtKRW(y.assetValueA)}</td>
+    <td class="right num pos" data-label="월 배당 (₩)">${fmtKRW(y.annualDividendA / 12)}</td>
+    <td class="right num muted" data-label="누적 배당">${fmtUSD0(y.cumDividendsA)}</td>
+  </tr>`).join('');
+}
+
+async function prefillSimFromHoldings() {
+  const sim = await api.getSimulation();
+  if (sim.positions && sim.positions.length > 0) {
+    if (!confirm('기존 포지션을 덮어쓸까요?')) return;
+  }
+  const holdings = await computeHoldings();
+  const active = holdings.filter(h => h.heldShares > 0.0001);
+  const positions = active.map(h => {
+    const cached = priceCache[h.symbol];
+    const currentPrice = cached?.price || h.avgBuy || 0;
+    const ttmDiv = estimateTtmDividendForSymbol(h.symbol);
+    let divPerShare = h.heldShares > 0 && ttmDiv > 0 ? ttmDiv / h.heldShares : 0;
+    if (divPerShare === 0 && currentPrice > 0) divPerShare = currentPrice * 0.04; // 4% default fallback
+    return {
+      symbol: h.symbol,
+      shares: Number(h.heldShares.toFixed(4)),
+      currentPrice: Number(currentPrice.toFixed(2)),
+      divPerShare: Number(divPerShare.toFixed(4)),
+      divGrowthPct: 5,
+      priceGrowthPct: 7,
+      monthlyBuy: 0
+    };
+  });
+  await api.saveSimulation({ positions });
+  await renderSimulation();
+}
+
+async function addPositionInteractive() {
+  const sym = (prompt('티커 입력 (예: SCHD)') || '').trim().toUpperCase();
+  if (!sym) return;
+  const sim = await api.getSimulation();
+  if (sim.positions.some(p => p.symbol === sym)) {
+    alert(`${sym}이(가) 이미 포지션에 있습니다.`); return;
+  }
+  const holdings = await computeHoldings();
+  const h = holdings.find(x => x.symbol === sym);
+  const cached = priceCache[sym];
+  const currentPrice = cached?.price || (h?.avgBuy) || 100;
+  const shares = h?.heldShares || 0;
+  let divPerShare = 0;
+  if (h) {
+    const ttm = estimateTtmDividendForSymbol(sym);
+    if (h.heldShares > 0 && ttm > 0) divPerShare = ttm / h.heldShares;
+  }
+  if (divPerShare === 0) divPerShare = currentPrice * 0.04;
+  sim.positions.push({
+    symbol: sym,
+    shares: Number(shares.toFixed(4)),
+    currentPrice: Number(currentPrice.toFixed(2)),
+    divPerShare: Number(divPerShare.toFixed(4)),
+    divGrowthPct: 5,
+    priceGrowthPct: 7,
+    monthlyBuy: 0
+  });
+  await api.saveSimulation({ positions: sim.positions });
+  await renderSimulation();
+}
+
+async function removePosition(idx) {
+  const sim = await api.getSimulation();
+  if (!sim.positions[idx]) return;
+  const sym = sim.positions[idx].symbol;
+  if (!confirm(`${sym} 포지션을 시뮬레이션에서 삭제할까요?`)) return;
+  sim.positions.splice(idx, 1);
+  await api.saveSimulation({ positions: sim.positions });
+  await renderSimulation();
+}
+
+async function updatePositionField(idx, field, value) {
+  const sim = await api.getSimulation();
+  if (!sim.positions[idx]) return;
+  sim.positions[idx][field] = value;
+  await api.saveSimulation({ positions: sim.positions });
+  // Only re-render results to avoid losing input focus
+  await renderSimResults();
+}
+
+async function clearPositions() {
+  if (!confirm('모든 포지션을 초기화할까요?')) return;
+  await api.saveSimulation({ positions: [] });
+  await renderSimulation();
+}
+
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+let chartMonthly, chartBySymbol, chartGoal, chartProgress;
+
+async function renderDashboard() {
+  const holdings = await computeHoldings();
+  const totalCost = holdings.reduce((s, h) => s + h.heldCost, 0);
+  const totalDiv = holdings.reduce((s, h) => s + h.dividends, 0); // net if tax enabled
+  const totalRealized = holdings.reduce((s, h) => s + h.realizedPL, 0);
+  const active = holdings.filter(h => h.heldShares > 0.0001);
+  const hasPrices = active.some(h => h.currentValue !== null);
+  const totalValue = active.reduce((s, h) => s + (h.currentValue !== null ? h.currentValue : h.heldCost), 0);
+  const totalUnrealized = hasPrices ? active.reduce((s, h) => s + (h.unrealizedPL !== null ? h.unrealizedPL : 0), 0) : null;
+  const unrealizedPct = (totalUnrealized !== null && totalCost > 0) ? (totalUnrealized / totalCost) * 100 : null;
+
+  document.getElementById('statValue').textContent = hasPrices ? fmtUSD0(totalValue) : fmtUSD0(totalCost);
+  document.getElementById('statValueKRW').textContent = fmtKRW(hasPrices ? totalValue : totalCost) + (hasPrices ? '' : ' (cost)');
+
+  const unEl = document.getElementById('statUnrealized');
+  const unSub = document.getElementById('statUnrealizedSub');
+  if (totalUnrealized !== null) {
+    unEl.textContent = signedUSD(totalUnrealized);
+    unEl.className = 'value display num ' + (totalUnrealized >= 0 ? 'pos' : 'neg');
+    unSub.textContent = unrealizedPct !== null ? fmtPctSigned(unrealizedPct) : '';
+    unSub.className = 'sub ' + (totalUnrealized >= 0 ? 'pos' : 'neg');
+  } else {
+    unEl.textContent = '—'; unEl.className = 'value display num muted';
+    unSub.textContent = hasFinnhubKey() ? '시세 조회 대기' : '설정에서 Finnhub API 키 등록';
+    unSub.className = 'sub muted';
+  }
+
+  const taxOn = taxRate() > 0;
+  document.getElementById('statDividends').textContent = fmtUSD(totalDiv);
+  document.getElementById('statDividendsKRW').textContent = fmtKRW(totalDiv) + (taxOn ? ' (세후)' : '');
+  const realizedEl = document.getElementById('statRealized');
+  realizedEl.textContent = signedUSD(totalRealized);
+  realizedEl.className = 'value display num ' + (totalRealized >= 0 ? 'pos' : (totalRealized < 0 ? 'neg' : ''));
+  document.getElementById('statRealizedKRW').textContent = signedKRW(totalRealized);
+
+  document.getElementById('holdingsNote').textContent = active.length + '개 보유 중' + (hasPrices ? '' : ' · 시세 미연결');
+
+  const tbody = document.getElementById('holdingsBody');
+  if (active.length === 0) { tbody.innerHTML = '<tr><td class="empty" colspan="7">아직 보유 종목이 없어요. "거래"에서 첫 매수를 추가해보세요.</td></tr>'; return; }
+  tbody.innerHTML = active.map(h => {
+    const yoc = h.heldCost > 0 ? (h.dividends / h.heldCost) * 100 : 0;
+    const priceDisplay = h.currentPrice !== null
+      ? `<div>${fmtUSD(h.avgBuy)}</div><div class="muted" style="font-size: 11px;">${fmtUSD(h.currentPrice)}</div>`
+      : fmtUSD(h.avgBuy);
+    const valueDisplay = h.currentValue !== null
+      ? `<div>${fmtUSD(h.currentValue)}</div><div class="muted" style="font-size: 11px;">${fmtUSD(h.heldCost)} cost</div>`
+      : fmtUSD(h.heldCost);
+    const unrealDisplay = h.unrealizedPL !== null
+      ? `<span class="${h.unrealizedPL >= 0 ? 'pos' : 'neg'}">${signedUSD(h.unrealizedPL)} <span style="font-size: 11px;">(${fmtPctSigned(h.unrealizedPct)})</span></span>`
+      : '<span class="muted">—</span>';
+    return `<tr>
+      <td class="ticker-cell" data-label="티커">${h.symbol}</td>
+      <td class="right num" data-label="수량">${fmtNum(h.heldShares)}</td>
+      <td class="right num" data-label="평균/현재">${priceDisplay}</td>
+      <td class="right num" data-label="평가금액">${valueDisplay}</td>
+      <td class="right num" data-label="미실현">${unrealDisplay}</td>
+      <td class="right num ${h.dividends > 0 ? 'pos' : 'muted'}" data-label="배당">${fmtUSD(h.dividends)}</td>
+      <td class="right num muted" data-label="YoC">${yoc > 0 ? fmtPct(yoc) : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function renderTransactions() {
+  const [purchases, sells] = await Promise.all([api.getPurchases(), api.getSells()]);
+  const all = [...purchases.map(p => ({ ...p, type: 'buy' })), ...sells.map(p => ({ ...p, type: 'sell' }))].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  document.getElementById('txCount').textContent = all.length;
+  const tbody = document.getElementById('transactionsBody');
+  if (all.length === 0) { tbody.innerHTML = '<tr><td class="empty" colspan="8">아직 거래 기록이 없어요.</td></tr>'; return; }
+  tbody.innerHTML = all.map(t => {
+    const total = Number(t.shares) * Number(t.price);
+    const isBuy = t.type === 'buy';
+    return `<tr>
+      <td class="ticker-cell" data-label="" style="font-family: 'Inter'; font-weight: 600;">${t.symbol.toUpperCase()} <span class="type-pill ${isBuy ? 'type-buy' : 'type-sell'}" style="margin-left: 8px;">${isBuy ? '매수' : '매도'}</span></td>
+      <td class="muted num" data-label="날짜">${fmtDate(t.date)}</td>
+      <td class="right num" data-label="수량">${fmtNum(t.shares)}</td>
+      <td class="right num" data-label="단가">${fmtUSD(t.price)}</td>
+      <td class="right num" data-label="총액">${fmtUSD(total)}</td>
+      <td class="muted" data-label="메모">${t.memo || ''}</td>
+      <td class="right" data-label=""><button class="btn-icon" data-edit-tx="${t.id}" data-tx-type="${t.type}" style="color: var(--accent);">수정</button><button class="btn-icon" data-del-tx="${t.id}" data-tx-type="${t.type}">삭제</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function renderDividends() {
+  const dividends = (await api.getDividends()).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  document.getElementById('dividendCount').textContent = dividends.length;
+  const taxOn = taxRate() > 0;
+
+  // Update label
+  document.getElementById('lblDivAmount').textContent = taxOn ? '금액 ($) — 세전' : '금액 ($)';
+
+  // Update header
+  const head = document.getElementById('dividendsHead');
+  if (taxOn) {
+    head.innerHTML = '<tr><th>티커</th><th>지급일</th><th class="right">세전 ($)</th><th class="right">세금 ($)</th><th class="right">세후 ($)</th><th class="right">세후 (₩)</th><th>메모</th><th></th></tr>';
+  } else {
+    head.innerHTML = '<tr><th>티커</th><th>지급일</th><th class="right">금액 ($)</th><th class="right">금액 (₩)</th><th>메모</th><th></th></tr>';
+  }
+
+  const tbody = document.getElementById('dividendsBody');
+  if (dividends.length === 0) {
+    tbody.innerHTML = '<tr><td class="empty" colspan="' + (taxOn ? 8 : 6) + '">아직 배당 기록이 없어요.</td></tr>';
+  } else if (taxOn) {
+    tbody.innerHTML = dividends.map(d => {
+      const g = Number(d.amount); const t = taxUSD(g); const n = netUSD(g);
+      return `<tr>
+        <td class="ticker-cell" data-label="" style="font-family: 'Inter'; font-weight: 600;">${d.symbol.toUpperCase()}</td>
+        <td class="muted num" data-label="지급일">${fmtDate(d.date)}</td>
+        <td class="right num" data-label="세전 ($)">${fmtUSD(g)}</td>
+        <td class="right num muted" data-label="세금 ($)">${fmtUSD(t)}</td>
+        <td class="right num pos" data-label="세후 ($)">${fmtUSD(n)}</td>
+        <td class="right num muted" data-label="세후 (₩)">${fmtKRW(n)}</td>
+        <td class="muted" data-label="메모">${d.memo || ''}</td>
+        <td class="right" data-label=""><button class="btn-icon" data-edit-dividend="${d.id}" style="color: var(--accent);">수정</button><button class="btn-icon" data-del-dividend="${d.id}">삭제</button></td>
+      </tr>`;
+    }).join('');
+  } else {
+    tbody.innerHTML = dividends.map(d => `<tr>
+      <td class="ticker-cell" data-label="" style="font-family: 'Inter'; font-weight: 600;">${d.symbol.toUpperCase()}</td>
+      <td class="muted num" data-label="지급일">${fmtDate(d.date)}</td>
+      <td class="right num pos" data-label="금액 ($)">${fmtUSD(d.amount)}</td>
+      <td class="right num muted" data-label="금액 (₩)">${fmtKRW(d.amount)}</td>
+      <td class="muted" data-label="메모">${d.memo || ''}</td>
+      <td class="right" data-label=""><button class="btn-icon" data-edit-dividend="${d.id}" style="color: var(--accent);">수정</button><button class="btn-icon" data-del-dividend="${d.id}">삭제</button></td>
+    </tr>`).join('');
+  }
+
+  // Annual summary card
+  const summary = getAnnualDividendSummary(dividends);
+  const card = document.getElementById('annualSummaryCard');
+  if (summary.length === 0) { card.style.display = 'none'; }
+  else {
+    card.style.display = '';
+    const threshold = loadStore().tax?.annualThresholdKRW || 20000000;
+    document.getElementById('annualSummary').innerHTML = summary.map(([year, sums]) => {
+      const netKRW = sums.net * CURRENT_RATE;
+      const pctOfThreshold = (netKRW / threshold) * 100;
+      const warn = pctOfThreshold >= 80 ? '<div class="help" style="margin-top: 6px; color: var(--warn);">⚠ 종합과세 임계값 근접</div>' : '';
+      return `<div class="annual-card">
+        <div class="year">${year}</div>
+        <div class="nums">
+          세전: <span class="v">${fmtUSD(sums.gross)}</span><br>
+          ${taxOn ? `세금: <span class="v">${fmtUSD(sums.tax)}</span><br>` : ''}
+          ${taxOn ? `세후: <span class="v">${fmtUSD(sums.net)}</span>` : ''}
+        </div>
+        <div class="net">${fmtKRWraw(netKRW)}${taxOn ? ' (세후)' : ''}</div>
+        ${warn}
+      </div>`;
+    }).join('');
+  }
+
+  renderDividendCharts(dividends);
+}
+
+function chartColors() {
+  return {
+    accent: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
+    border: getComputedStyle(document.documentElement).getPropertyValue('--border').trim(),
+    muted: getComputedStyle(document.documentElement).getPropertyValue('--muted').trim(),
+    warn: getComputedStyle(document.documentElement).getPropertyValue('--warn').trim(),
+    text: getComputedStyle(document.documentElement).getPropertyValue('--text').trim()
+  };
+}
+
+function renderDividendCharts(dividends) {
+  const months = aggregateMonthly(dividends, 12, true);
+  const bySymMap = new Map(); const tr = taxRate();
+  for (const d of dividends) { const sym = d.symbol.toUpperCase(); bySymMap.set(sym, (bySymMap.get(sym) || 0) + Number(d.amount) * (1 - tr)); }
+  const bySym = Array.from(bySymMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const c = chartColors();
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.color = c.muted;
+
+  if (chartMonthly) chartMonthly.destroy();
+  chartMonthly = new Chart(document.getElementById('chartMonthly'), {
+    type: 'bar',
+    data: { labels: months.map(m => m.label), datasets: [{ data: months.map(m => m.total), backgroundColor: c.accent, borderRadius: 3, maxBarThickness: 40 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => '$' + ctx.parsed.y.toFixed(2) } } },
+      scales: { x: { grid: { display: false }, border: { color: c.border } }, y: { grid: { color: c.border }, border: { display: false }, ticks: { callback: v => '$' + v } } }
+    }
+  });
+  if (chartBySymbol) chartBySymbol.destroy();
+  chartBySymbol = new Chart(document.getElementById('chartBySymbol'), {
+    type: 'bar',
+    data: { labels: bySym.map(([s]) => s), datasets: [{ data: bySym.map(([_, v]) => v), backgroundColor: c.accent, borderRadius: 3, maxBarThickness: 28 }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => '$' + ctx.parsed.x.toFixed(2) } } },
+      scales: { x: { grid: { color: c.border }, border: { display: false }, ticks: { callback: v => '$' + v } }, y: { grid: { display: false }, border: { color: c.border }, ticks: { font: { family: "'JetBrains Mono', monospace" } } } }
+    }
+  });
+}
+
+async function renderGoal() {
+  const [goal, dividends, log] = await Promise.all([api.getGoal(), api.getDividends(), api.getProgressLog()]);
+  document.getElementById('inputGoalTarget').value = goal.monthlyKRW;
+  document.getElementById('inputGoalYield').value = goal.yieldPct;
+  const taxOn = taxRate() > 0;
+  document.getElementById('goalBasis').textContent = '최근 12개월 월평균 배당 기준' + (taxOn ? ' (세후)' : '');
+
+  const months12 = aggregateMonthly(dividends, 12, true);
+  const avg12USD = months12.reduce((s, m) => s + m.total, 0) / 12;
+  const today = new Date();
+  const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const lastKey = lastMonth.getFullYear() + '-' + String(lastMonth.getMonth() + 1).padStart(2, '0');
+  const tr = taxRate();
+  const lastMonthUSD = dividends.filter(d => (d.date || '').slice(0, 7) === lastKey).reduce((s, d) => s + Number(d.amount) * (1 - tr), 0);
+  let allTimeAvgUSD = 0;
+  if (dividends.length > 0) {
+    const sorted = dividends.slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    const first = new Date(sorted[0].date);
+    const monthsElapsed = Math.max(1, (today.getFullYear() - first.getFullYear()) * 12 + (today.getMonth() - first.getMonth()) + 1);
+    allTimeAvgUSD = dividends.reduce((s, d) => s + Number(d.amount) * (1 - tr), 0) / monthsElapsed;
+  }
+  const targetKRW = Number(goal.monthlyKRW) || 0;
+  const currentKRW = avg12USD * CURRENT_RATE;
+  const pct = targetKRW > 0 ? Math.min(100, (currentKRW / targetKRW) * 100) : 0;
+  const gapKRW = Math.max(0, targetKRW - currentKRW);
+
+  document.getElementById('goalCurrent').textContent = fmtKRWraw(currentKRW);
+  document.getElementById('goalTarget').textContent = fmtKRWraw(targetKRW);
+  document.getElementById('goalProgressFill').style.width = pct + '%';
+  document.getElementById('goalProgressPct').textContent = pct.toFixed(1) + '%';
+  document.getElementById('goalGap').textContent = gapKRW > 0 ? '남은 목표: ' + fmtKRWraw(gapKRW) : '🎉 목표 달성!';
+  document.getElementById('goalLastMonth').textContent = fmtKRW(lastMonthUSD);
+  document.getElementById('goalLastMonthUSD').textContent = fmtUSD(lastMonthUSD);
+  document.getElementById('goalAllTime').textContent = fmtKRW(allTimeAvgUSD);
+  document.getElementById('goalAllTimeUSD').textContent = fmtUSD(allTimeAvgUSD);
+  const yieldDec = (Number(goal.yieldPct) || 0) / 100;
+  if (gapKRW > 0 && yieldDec > 0) {
+    const neededUSD = (gapKRW * 12 / CURRENT_RATE) / yieldDec;
+    document.getElementById('goalNeeded').textContent = fmtKRW(neededUSD) + ' / ' + fmtUSD0(neededUSD);
+  } else if (gapKRW <= 0) { document.getElementById('goalNeeded').textContent = '0'; }
+  else { document.getElementById('goalNeeded').textContent = '—'; }
+
+  const targetMonthlyUSD = targetKRW / CURRENT_RATE;
+  const c = chartColors();
+  if (chartGoal) chartGoal.destroy();
+  chartGoal = new Chart(document.getElementById('chartGoal'), {
+    data: {
+      labels: months12.map(m => m.label),
+      datasets: [
+        { type: 'bar', label: '월 배당 ($)' + (taxOn ? ' 세후' : ''), data: months12.map(m => m.total), backgroundColor: c.accent, borderRadius: 3, maxBarThickness: 40, order: 2 },
+        { type: 'line', label: '목표 ($)', data: months12.map(() => targetMonthlyUSD), borderColor: c.warn, borderWidth: 2, borderDash: [4, 4], pointRadius: 0, fill: false, order: 1 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12, boxHeight: 12 } }, tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': $' + ctx.parsed.y.toFixed(2) } } },
+      scales: { x: { grid: { display: false }, border: { color: c.border } }, y: { grid: { color: c.border }, border: { display: false }, ticks: { callback: v => '$' + v } } }
+    }
+  });
+
+  renderProgressLog(log, targetKRW);
+}
+
+function renderProgressLog(log, targetKRW) {
+  const sorted = log.slice().sort((a, b) => a.date.localeCompare(b.date));
+  const insight = computeProgressInsight(sorted, targetKRW);
+  const insightEl = document.getElementById('progressInsight');
+  if (insight && (insight.yoyPct !== null || insight.monthsToTarget !== null)) {
+    const parts = [];
+    if (insight.yoyPct !== null) {
+      const sign = insight.yoyPct >= 0 ? '+' : '';
+      parts.push(`<strong>12개월 전 대비 ${sign}${insight.yoyPct.toFixed(1)}%</strong> (${fmtKRWraw(insight.oneYearAgo.avgMonthlyKRW)} → ${fmtKRWraw(insight.latest.avgMonthlyKRW)})`);
+    }
+    if (insight.monthsToTarget !== null && insight.monthsToTarget > 0) {
+      const months = Math.ceil(insight.monthsToTarget);
+      const year = Math.floor(months / 12), m = months % 12;
+      const dur = year > 0 ? `${year}년 ${m}개월` : `${months}개월`;
+      parts.push(`현재 추이로 <strong>약 ${dur} 뒤 목표 달성 예상</strong>`);
+    } else if (insight.pace !== null && insight.pace <= 0 && targetKRW > insight.latest.avgMonthlyKRW) {
+      parts.push(`최근 추이가 정체/하락 중이에요. 추가 매수가 필요합니다.`);
+    }
+    insightEl.innerHTML = parts.length > 0 ? `<div class="insight">${parts.join(' · ')}</div>` : '';
+  } else {
+    insightEl.innerHTML = sorted.length < 2 ? '<div class="insight">스냅샷이 2개 이상 쌓이면 추이 분석이 나옵니다.</div>' : '';
+  }
+
+  // Chart
+  const c = chartColors();
+  if (chartProgress) chartProgress.destroy();
+  const labels = sorted.map(s => s.date.slice(2, 7));
+  chartProgress = new Chart(document.getElementById('chartProgress'), {
+    data: {
+      labels,
+      datasets: [
+        { type: 'line', label: '월평균 배당 (₩)', data: sorted.map(s => s.avgMonthlyKRW), borderColor: c.accent, backgroundColor: c.accent + '20', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 3, pointBackgroundColor: c.accent, order: 1 },
+        { type: 'line', label: '목표 (₩)', data: sorted.map(s => s.targetKRW), borderColor: c.warn, borderWidth: 2, borderDash: [4, 4], pointRadius: 0, fill: false, order: 2 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12 } }, tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ₩' + ctx.parsed.y.toLocaleString() } } },
+      scales: { x: { grid: { display: false }, border: { color: c.border } }, y: { grid: { color: c.border }, border: { display: false }, ticks: { callback: v => '₩' + (v / 10000) + '만' } } }
+    }
+  });
+
+  // Table
+  const tbody = document.getElementById('progressBody');
+  if (sorted.length === 0) {
+    tbody.innerHTML = '<tr><td class="empty" colspan="6">아직 스냅샷이 없어요. "지금 스냅샷" 버튼을 누르거나 다음 달부터 자동 기록됩니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = sorted.slice().reverse().map(s => {
+    const pct = s.targetKRW > 0 ? (s.avgMonthlyKRW / s.targetKRW) * 100 : 0;
+    return `<tr>
+      <td class="muted num" data-label="날짜">${s.date} ${s.auto ? '<span class="badge" style="margin-left: 4px;">자동</span>' : ''}</td>
+      <td class="right num" data-label="월평균 (₩)">${fmtKRWraw(s.avgMonthlyKRW)}</td>
+      <td class="right num muted" data-label="목표 (₩)">${fmtKRWraw(s.targetKRW)}</td>
+      <td class="right num" data-label="달성률">${pct.toFixed(1)}%</td>
+      <td class="right num muted" data-label="보유">${s.holdings}</td>
+      <td class="right" data-label=""><button class="btn-icon" data-del-snap="${s.id}">삭제</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function getRecentTickers(limit = 8) {
+  const s = loadStore();
+  const all = [...s.purchases.map(p => ({ sym: p.symbol.toUpperCase(), date: p.date })), ...s.sells.map(p => ({ sym: p.symbol.toUpperCase(), date: p.date })), ...s.dividends.map(d => ({ sym: d.symbol.toUpperCase(), date: d.date }))].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const seen = new Set(); const out = [];
+  for (const t of all) { if (!seen.has(t.sym)) { seen.add(t.sym); out.push(t.sym); } if (out.length >= limit) break; }
+  return out;
+}
+async function getHeldTickers() {
+  const h = await computeHoldings();
+  return h.filter(x => x.heldShares > 0.0001).map(x => x.symbol);
+}
+async function getAllKnownTickers() {
+  const s = loadStore();
+  return Array.from(new Set([...s.purchases.map(p => p.symbol.toUpperCase()), ...s.sells.map(p => p.symbol.toUpperCase()), ...s.dividends.map(d => d.symbol.toUpperCase()), ...s.favorites])).sort();
+}
+async function renderTickerSuggestions() {
+  const favorites = await api.getFavorites();
+  const held = await getHeldTickers();
+  const recent = getRecentTickers(20);
+  const seen = new Set(); const items = [];
+  for (const sym of favorites) if (!seen.has(sym)) { seen.add(sym); items.push({ sym, cat: 'fav' }); }
+  for (const sym of held) if (!seen.has(sym)) { seen.add(sym); items.push({ sym, cat: 'held' }); }
+  for (const sym of recent) if (!seen.has(sym)) { seen.add(sym); items.push({ sym, cat: 'recent' }); }
+  const display = items.slice(0, 12);
+  const html = display.length === 0
+    ? '<span class="muted" style="font-size: 12px;">최근 / 보유 / 즐겨찾기 종목이 여기에 나타납니다.</span>'
+    : display.map(it => {
+        const cls = it.cat === 'fav' ? 'favorite' : (it.cat === 'held' ? 'held' : '');
+        const star = it.cat === 'fav' ? '<span class="star">★</span>' : '';
+        return `<button type="button" class="ticker-pill ${cls}" data-ticker="${it.sym}">${star}${it.sym}</button>`;
+      }).join('');
+  document.getElementById('pillsTx').innerHTML = html;
+  document.getElementById('pillsDiv').innerHTML = html;
+  const all = await getAllKnownTickers();
+  document.getElementById('tickerList').innerHTML = all.map(t => `<option value="${t}">`).join('');
+}
+async function renderFavManage() {
+  const favs = await api.getFavorites();
+  const el = document.getElementById('favManage');
+  if (favs.length === 0) { el.innerHTML = '<span class="muted" style="font-size: 13px;">아직 즐겨찾기가 없어요.</span>'; return; }
+  el.innerHTML = favs.map(f => `<span class="fav-tag">${f}<button data-rem-fav="${f}" title="삭제">×</button></span>`).join('');
+}
+function updateStarUI(inputEl, starEl) {
+  const sym = (inputEl.value || '').trim().toUpperCase();
+  const favs = loadStore().favorites;
+  const isFav = sym && favs.includes(sym);
+  starEl.textContent = isFav ? '★' : '☆';
+  starEl.classList.toggle('active', isFav);
+}
+
+function updateTaxUI() {
+  const t = loadStore().tax;
+  document.getElementById('toggleTax').classList.toggle('on', !!t.enabled);
+  document.getElementById('inputTaxRate').value = t.withholdingPct;
+  document.getElementById('inputTaxThreshold').value = t.annualThresholdKRW;
+}
+
+async function refreshAll() {
+  if (hasFinnhubKey()) {
+    const held = await getHeldTickers();
+    await refreshPrices(held);
+  }
+  await renderDashboard();
+  await renderAllocation();
+  await renderTransactions();
+  await renderDividends();
+  await renderGoal();
+  await renderSimulation();
+  await renderCoach();
+  await renderTickerSuggestions();
+  updatePriceStatusUI();
+}
+
+/* ============================================================
+   PORTFOLIO ALLOCATION (DOUGHNUT)
+   ============================================================ */
+const ALLOC_BASIS_KEY = 'portfolio_alloc_basis';
+function getAllocBasis() { return localStorage.getItem(ALLOC_BASIS_KEY) || 'value'; }
+function setAllocBasis(v) { localStorage.setItem(ALLOC_BASIS_KEY, v); }
+
+function getAllocationPalette() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) return ['#6b9e84', '#d4a35f', '#d18470', '#8aa8c4', '#b89678', '#9bbb95', '#b08bb0', '#888'];
+  return ['#1F4D3F', '#B8761F', '#993D2D', '#4A6B85', '#7A5B40', '#5B7D5A', '#6B4A6B', '#888'];
+}
+
+let chartAllocation = null;
+
+async function renderAllocation() {
+  const section = document.getElementById('allocationSection');
+  const holdings = await computeHoldings();
+  const active = holdings.filter(h => h.heldShares > 0.0001);
+  if (active.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  // Sync toggle UI with stored preference
+  const basis = getAllocBasis();
+  const hasPrices = active.some(h => h.currentValue !== null);
+  const effBasis = (basis === 'value' && hasPrices) ? 'value' : 'cost';
+  document.querySelectorAll('#allocationToggle button').forEach(b => b.classList.toggle('active', b.dataset.basis === effBasis));
+  // If value mode selected but no prices, show muted state on value button
+  document.querySelector('#allocationToggle button[data-basis="value"]').disabled = !hasPrices;
+
+  // Build dataset
+  const items = active.map(h => ({
+    symbol: h.symbol,
+    amount: effBasis === 'value' ? (h.currentValue !== null ? h.currentValue : h.heldCost) : h.heldCost
+  })).filter(d => d.amount > 0).sort((a, b) => b.amount - a.amount);
+
+  const total = items.reduce((s, d) => s + d.amount, 0);
+  if (total <= 0) { section.style.display = 'none'; return; }
+
+  // Top N + 기타
+  const TOP_N = window.innerWidth < 720 ? 5 : 7;
+  let display;
+  if (items.length > TOP_N + 1) {
+    display = items.slice(0, TOP_N);
+    const others = items.slice(TOP_N);
+    const othersAmount = others.reduce((s, d) => s + d.amount, 0);
+    display.push({ symbol: `기타 (${others.length})`, amount: othersAmount, isOthers: true });
+  } else {
+    display = items;
+  }
+
+  const palette = getAllocationPalette();
+  const colors = display.map((d, i) => d.isOthers ? palette[palette.length - 1] : palette[i % (palette.length - 1)]);
+
+  const surfaceColor = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
+
+  if (chartAllocation) chartAllocation.destroy();
+  chartAllocation = new Chart(document.getElementById('chartAllocation'), {
+    type: 'doughnut',
+    data: {
+      labels: display.map(d => d.symbol),
+      datasets: [{ data: display.map(d => d.amount), backgroundColor: colors, borderColor: surfaceColor, borderWidth: 2, hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const v = ctx.parsed; const pct = (v / total * 100).toFixed(1);
+              return ctx.label + ': ' + fmtUSD0(v) + ' (' + pct + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+
+  const legendEl = document.getElementById('allocationLegend');
+  legendEl.innerHTML = display.map((d, i) => {
+    const pct = (d.amount / total * 100).toFixed(1);
+    return `<div class="allocation-row">
+      <span class="allocation-dot" style="background: ${colors[i]};"></span>
+      <div class="allocation-info">
+        <span class="label">${d.symbol}</span>
+        <span class="right-side">
+          <span class="amt">${fmtUSD0(d.amount)}</span>
+          <span class="pct">${pct}%</span>
+        </span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Concentration warning
+  const warnEl = document.getElementById('allocationWarning');
+  const topItem = items[0];
+  if (topItem && total > 0) {
+    const topPct = (topItem.amount / total) * 100;
+    if (topPct >= 30) {
+      warnEl.innerHTML = `<div class="insight warn" style="margin-top: 12px;">⚠ <strong>${topItem.symbol}</strong>이(가) 전체의 <strong>${topPct.toFixed(1)}%</strong>를 차지합니다. 한 종목 비중이 너무 높아요. 분산을 고려해보세요.</div>`;
+    } else { warnEl.innerHTML = ''; }
+  } else { warnEl.innerHTML = ''; }
+}
+
+/* ============================================================
+   COACH (rule-based buying behavior scoring)
+   ============================================================ */
+function scoreColor(score) {
+  if (score >= 80) return 'var(--positive)';
+  if (score >= 60) return 'var(--warn)';
+  return 'var(--negative)';
+}
+
+function scoreLetter(total) {
+  if (total >= 90) return 'A';
+  if (total >= 80) return 'B';
+  if (total >= 70) return 'C';
+  if (total >= 60) return 'D';
+  return 'F';
+}
+
+function generateSummary(categories, total) {
+  if (total >= 85) return '아주 잘하고 계세요. 지금 페이스를 유지하세요.';
+  const sorted = [...categories].sort((a, b) => b.score - a.score);
+  const top = sorted[0];
+  const bottom = sorted[sorted.length - 1];
+  if (total >= 70) {
+    if (top && bottom && top.score - bottom.score >= 15) {
+      return `<strong>${top.name}</strong>이(가) 강점, <strong>${bottom.name}</strong>은(는) 개선 여지가 있어요.`;
+    }
+    return '전반적으로 무난하게 잘하고 계세요.';
+  }
+  if (total >= 50) {
+    if (bottom) return `<strong>${bottom.name}</strong> 점수가 낮아요. 아래 짚을 점을 확인해보세요.`;
+    return '몇 가지 개선할 점이 있어요.';
+  }
+  return '매수 패턴 점검이 필요해요. 짚을 점을 천천히 확인해보세요.';
+}
+
+async function computeCoachScore() {
+  const purchases = await api.getPurchases();
+  const dividends = await api.getDividends();
+  const holdings = await computeHoldings();
+  const goal = await api.getGoal();
+  const style = await api.getCoachStyle();
+  const active = holdings.filter(h => h.heldShares > 0.0001);
+
+  if (purchases.length < 3) {
+    return { insufficient: true, count: purchases.length, style };
+  }
+
+  // Weights by style
+  const W = style === 'accumulator' ? {
+    diversification: 0,  // reference only
+    consistency: 0.35,
+    alignment: 0.30,
+    discipline: 0.20,
+    timing: 0.15
+  } : {
+    diversification: 0.25,
+    consistency: 0.25,
+    alignment: 0.20,
+    discipline: 0.15,
+    timing: 0.15
+  };
+
+  const categories = [];
+  const flags = [];
+  const totalCost = active.reduce((s, h) => s + h.heldCost, 0);
+
+  // 1. 분산
+  if (totalCost > 0 && active.length > 0) {
+    const sortedActive = [...active].sort((a, b) => b.heldCost - a.heldCost);
+    const maxConc = sortedActive[0].heldCost / totalCost;
+    const numHoldings = active.length;
+    let score = 100;
+    if (maxConc > 0.5) score = 30;
+    else if (maxConc > 0.4) score = 50;
+    else if (maxConc > 0.3) score = 70;
+    else if (maxConc > 0.2) score = 85;
+    if (numHoldings >= 8) score = Math.min(100, score + 5);
+    if (numHoldings < 3) score = Math.max(0, score - 20);
+    const topSymbol = sortedActive[0].symbol;
+    let detail;
+    if (style === 'accumulator') {
+      detail = `${topSymbol} 비중 ${(maxConc * 100).toFixed(1)}% · ${numHoldings}개 종목 (적립식 — 참고만)`;
+    } else if (maxConc > 0.3) {
+      detail = `${topSymbol} 비중 ${(maxConc * 100).toFixed(1)}% — 한 종목 의존도 높음`;
+      flags.push({ type: 'warn', text: `<strong>${topSymbol}</strong>이(가) 전체의 ${(maxConc * 100).toFixed(1)}%를 차지. 신규 자금은 다른 종목으로 분산 고려.` });
+    } else {
+      detail = `${numHoldings}개 종목, 최대 비중 ${(maxConc * 100).toFixed(1)}%`;
+      if (numHoldings >= 8 && maxConc < 0.25) flags.push({ type: 'good', text: `${numHoldings}개 종목으로 잘 분산되어 있어요.` });
+      else if (numHoldings < 3) flags.push({ type: 'warn', text: `보유 종목이 ${numHoldings}개로 적습니다. 분산을 늘려보세요.` });
+    }
+    categories.push({ key: 'diversification', name: '분산', weight: W.diversification, score: Math.round(score), detail });
+  }
+
+  // 2. 꾸준함
+  const today = new Date();
+  const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+  const recentBuys = purchases.filter(p => p.date && new Date(p.date) >= oneYearAgo);
+  if (recentBuys.length > 0) {
+    const monthlyAmounts = new Array(12).fill(0);
+    for (const p of recentBuys) {
+      const d = new Date(p.date);
+      const monthDiff = (today.getFullYear() - d.getFullYear()) * 12 + (today.getMonth() - d.getMonth());
+      if (monthDiff >= 0 && monthDiff < 12) {
+        monthlyAmounts[11 - monthDiff] += Number(p.shares) * Number(p.price);
+      }
+    }
+    const activeMonths = monthlyAmounts.filter(a => a > 0).length;
+    const nonZero = monthlyAmounts.filter(a => a > 0);
+    const mean = nonZero.length > 0 ? nonZero.reduce((s, a) => s + a, 0) / nonZero.length : 0;
+    const variance = nonZero.length > 0 ? nonZero.reduce((s, a) => s + (a - mean) ** 2, 0) / nonZero.length : 0;
+    const stdDev = Math.sqrt(variance);
+    const cv = mean > 0 ? stdDev / mean : 0;
+
+    let regularityScore = 0;
+    if (activeMonths >= 11) regularityScore = 100;
+    else if (activeMonths >= 9) regularityScore = 85;
+    else if (activeMonths >= 6) regularityScore = 70;
+    else if (activeMonths >= 3) regularityScore = 50;
+    else if (activeMonths >= 1) regularityScore = 30;
+
+    let amountScore = 100;
+    if (cv >= 1.2) amountScore = 30;
+    else if (cv >= 0.8) amountScore = 50;
+    else if (cv >= 0.5) amountScore = 70;
+    else if (cv >= 0.3) amountScore = 85;
+
+    const score = Math.round((regularityScore + amountScore) / 2);
+    let detail;
+    if (activeMonths >= 10) {
+      detail = `최근 12개월 중 ${activeMonths}개월 매수, 금액 편차 ${(cv * 100).toFixed(0)}%`;
+      if (cv < 0.5) flags.push({ type: 'good', text: `매월 꾸준히 매수 (12개월 중 ${activeMonths}개월). DCA 효과를 잘 누리고 있어요.` });
+    } else if (activeMonths >= 6) {
+      detail = `최근 12개월 중 ${activeMonths}개월 매수`;
+    } else {
+      detail = `최근 12개월 중 ${activeMonths}개월만 매수 — 간격이 큼`;
+      flags.push({ type: 'warn', text: `최근 12개월 중 <strong>${activeMonths}개월</strong>만 매수했어요. 매월 자동매수 같은 규칙적 매수를 고려해보세요.` });
+    }
+    categories.push({ key: 'consistency', name: '꾸준함', weight: W.consistency, score, detail });
+  }
+
+  // 3. 목표 정합성
+  if (active.length > 0 && totalCost > 0) {
+    const dividendTickers = new Set(dividends.map(d => d.symbol.toUpperCase()));
+    const divPayerCost = active.filter(h => dividendTickers.has(h.symbol)).reduce((s, h) => s + h.heldCost, 0);
+    const divPayerRatio = divPayerCost / totalCost;
+    const tr = taxRate();
+    let ttmDivTotal = 0;
+    for (const h of active) {
+      ttmDivTotal += estimateTtmDividendForSymbol(h.symbol) * (1 - tr);
+    }
+    const portfolioYoC = totalCost > 0 ? (ttmDivTotal / totalCost) * 100 : 0;
+    const expectedYield = Number(goal.yieldPct) || 4;
+
+    let ratioScore = 20;
+    if (divPayerRatio >= 0.8) ratioScore = 100;
+    else if (divPayerRatio >= 0.6) ratioScore = 80;
+    else if (divPayerRatio >= 0.4) ratioScore = 60;
+    else if (divPayerRatio >= 0.2) ratioScore = 40;
+
+    let yieldScore = 100;
+    if (portfolioYoC > 0) {
+      const ratio = portfolioYoC / expectedYield;
+      if (ratio < 0.5) yieldScore = 50;
+      else if (ratio < 0.8) yieldScore = 75;
+      else yieldScore = 100;
+    } else {
+      yieldScore = divPayerRatio > 0.5 ? 85 : 60;
+    }
+    const score = Math.round((ratioScore + yieldScore) / 2);
+    const detail = `투자금의 ${(divPayerRatio * 100).toFixed(0)}%가 배당 지급 종목 · TTM YoC ${portfolioYoC.toFixed(2)}%`;
+
+    if (divPayerRatio < 0.5) {
+      flags.push({ type: 'warn', text: `배당주가 아닌 종목에 투자금의 <strong>${((1 - divPayerRatio) * 100).toFixed(0)}%</strong>가 들어있어요. 월 배당 목표라면 배당 지급 종목 비중을 늘려보세요.` });
+    } else if (divPayerRatio >= 0.8) {
+      flags.push({ type: 'good', text: `투자금의 ${(divPayerRatio * 100).toFixed(0)}%가 배당주 — 월 배당 목표에 잘 맞춰져 있어요.` });
+    }
+    if (portfolioYoC > 0 && portfolioYoC < expectedYield * 0.6) {
+      flags.push({ type: 'tip', text: `현재 TTM YoC가 ${portfolioYoC.toFixed(2)}%인데 목표 수익률 ${expectedYield}%보다 낮아요. 배당 수익률이 높은 종목 비중을 늘리거나, 목표 수익률을 현실적으로 조정해보세요.` });
+    }
+    categories.push({ key: 'alignment', name: '목표 정합성', weight: W.alignment, score, detail });
+  }
+
+  // 4. 자제력
+  if (recentBuys.length > 0) {
+    const buyAmounts = recentBuys.map(p => Number(p.shares) * Number(p.price));
+    const sortedAmts = [...buyAmounts].sort((a, b) => a - b);
+    const median = sortedAmts.length > 0 ? sortedAmts[Math.floor(sortedAmts.length / 2)] : 0;
+    const impulses = recentBuys.filter(p => median > 0 && (Number(p.shares) * Number(p.price)) > median * 3);
+
+    const bursts = [];
+    const byTicker = {};
+    for (const p of recentBuys) {
+      const sym = p.symbol.toUpperCase();
+      if (!byTicker[sym]) byTicker[sym] = [];
+      byTicker[sym].push(p);
+    }
+    for (const sym in byTicker) {
+      const sorted = byTicker[sym].slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+      for (let i = 0; i + 2 < sorted.length; i++) {
+        const start = new Date(sorted[i].date);
+        const end = new Date(sorted[i + 2].date);
+        const days = (end - start) / (1000 * 60 * 60 * 24);
+        if (days <= 7) {
+          bursts.push({ symbol: sym, dates: sorted.slice(i, i + 3).map(s => s.date) });
+          break;
+        }
+      }
+    }
+
+    let score = 100;
+    score -= impulses.length * 8;
+    score -= bursts.length * 12;
+    score = Math.max(0, Math.min(100, score));
+    let detail;
+    if (impulses.length === 0 && bursts.length === 0) {
+      detail = '충동매수 패턴 없음';
+      if (recentBuys.length >= 8) flags.push({ type: 'good', text: `최근 12개월 ${recentBuys.length}건의 매수 모두 균형 잡힌 규모예요. 자제력 좋아요.` });
+    } else {
+      const parts = [];
+      if (impulses.length > 0) parts.push(`${impulses.length}건의 큰 매수`);
+      if (bursts.length > 0) parts.push(`${bursts.length}개 종목 단기 폭주`);
+      detail = parts.join(', ');
+    }
+
+    for (const imp of impulses.slice(0, 2)) {
+      const amt = Number(imp.shares) * Number(imp.price);
+      flags.push({ type: 'warn', text: `${imp.date} <strong>${imp.symbol.toUpperCase()}</strong> ${fmtUSD0(amt)} 매수 — 평소 매수액 중간값(${fmtUSD0(median)})의 ${(amt / median).toFixed(1)}배. 충동매수 가능성.` });
+    }
+    for (const b of bursts.slice(0, 2)) {
+      flags.push({ type: 'warn', text: `<strong>${b.symbol}</strong>을(를) 7일 내 3회 이상 매수 (${b.dates.join(', ')}). 시장 흐름에 휩쓸렸을 가능성. 매수 전 24시간 대기 룰을 고려해보세요.` });
+    }
+    categories.push({ key: 'discipline', name: '자제력', weight: W.discipline, score: Math.round(score), detail });
+  }
+
+  // 5. 타이밍
+  const withPrices = active.filter(h => h.currentPrice && h.currentPrice > 0 && h.avgBuy > 0);
+  if (withPrices.length > 0) {
+    let weightedDelta = 0, totalWeight = 0;
+    for (const h of withPrices) {
+      const delta = (h.avgBuy - h.currentPrice) / h.currentPrice;
+      const weight = h.heldCost;
+      weightedDelta += delta * weight;
+      totalWeight += weight;
+    }
+    const avgDelta = totalWeight > 0 ? weightedDelta / totalWeight : 0;
+    let score = 60 - avgDelta * 100;
+    score = Math.max(0, Math.min(100, score));
+    let detail;
+    if (avgDelta < -0.1) {
+      detail = `평균 매입가가 현재가보다 ${(Math.abs(avgDelta) * 100).toFixed(1)}% 낮음 — DCA 효과 좋음`;
+      flags.push({ type: 'good', text: `평균 매입가가 현재가보다 <strong>${(Math.abs(avgDelta) * 100).toFixed(1)}% 낮아요</strong>. 분할매수가 잘 작동하고 있어요.` });
+    } else if (avgDelta > 0.1) {
+      detail = `평균 매입가가 현재가보다 ${(avgDelta * 100).toFixed(1)}% 높음 — 고점 매수 비중 있음`;
+      flags.push({ type: 'warn', text: `평균 매입가가 현재가보다 <strong>${(avgDelta * 100).toFixed(1)}% 높아요</strong>. 비싸게 산 종목이 있어요. 현재 시점에선 무리한 추격 매수를 자제해보세요.` });
+    } else {
+      detail = '평균 매입가 ≈ 현재가';
+    }
+    categories.push({ key: 'timing', name: '타이밍', weight: W.timing, score: Math.round(score), detail });
+  }
+
+  // Total weighted score - only categories with weight > 0
+  const scored = categories.filter(c => c.weight > 0);
+  const totalWeight = scored.reduce((s, c) => s + c.weight, 0);
+  const total = totalWeight > 0 ? Math.round(scored.reduce((s, c) => s + c.score * c.weight, 0) / totalWeight) : 0;
+
+  return { insufficient: false, total, categories, flags, purchaseCount: purchases.length, style };
+}
+
+async function renderCoach() {
+  const result = await computeCoachScore();
+  const empty = document.getElementById('coachEmpty');
+  const content = document.getElementById('coachContent');
+  if (result.insufficient) {
+    empty.style.display = '';
+    content.style.display = 'none';
+    document.getElementById('coachEmptyDetail').textContent = `현재 매수 기록 ${result.count}건. 3건 이상 쌓이면 점수를 매겨드릴게요.`;
+    return;
+  }
+  empty.style.display = 'none';
+  content.style.display = '';
+
+  // Style toggle UI
+  const style = result.style;
+  document.querySelectorAll('#coachStyleSeg button').forEach(b => b.classList.toggle('active', b.dataset.coachStyle === style));
+  document.getElementById('coachStyleHelp').textContent = style === 'accumulator'
+    ? '꾸준함 35% · 목표 정합성 30% · 자제력 20% · 타이밍 15% (분산은 참고용)'
+    : '분산 25% · 꾸준함 25% · 목표 정합성 20% · 자제력 15% · 타이밍 15%';
+
+  const letter = scoreLetter(result.total);
+  const gradeEl = document.getElementById('coachGrade');
+  gradeEl.textContent = letter;
+  gradeEl.className = 'grade-letter grade-' + letter;
+  document.getElementById('coachScore').textContent = `${result.total} / 100`;
+  document.getElementById('coachSummary').innerHTML = generateSummary(result.categories.filter(c => c.weight > 0), result.total);
+
+  // Main categories (weight > 0)
+  const mainCats = result.categories.filter(c => c.weight > 0);
+  document.getElementById('coachCategories').innerHTML = mainCats.map(c => `
+    <div class="cat-row">
+      <div class="cat-head">
+        <span class="cat-name">${c.name} <span class="muted" style="font-size: 11px; margin-left: 4px;">${(c.weight * 100).toFixed(0)}%</span></span>
+        <span class="cat-score" style="color: ${scoreColor(c.score)};">${c.score}</span>
+      </div>
+      <div class="cat-bar"><div class="cat-fill" style="width: ${c.score}%; background: ${scoreColor(c.score)};"></div></div>
+      <div class="cat-detail">${c.detail}</div>
+    </div>
+  `).join('');
+
+  // Reference categories (weight === 0)
+  const refCats = result.categories.filter(c => c.weight === 0);
+  const refCard = document.getElementById('coachReferences');
+  if (refCats.length > 0) {
+    refCard.style.display = '';
+    document.getElementById('coachRefCategories').innerHTML = refCats.map(c => `
+      <div class="cat-row">
+        <div class="cat-head">
+          <span class="cat-name">${c.name} <span class="muted" style="font-size: 11px; margin-left: 4px;">참고</span></span>
+          <span class="cat-score muted">${c.score}</span>
+        </div>
+        <div class="cat-bar"><div class="cat-fill" style="width: ${c.score}%; background: var(--muted); opacity: 0.6;"></div></div>
+        <div class="cat-detail">${c.detail}</div>
+      </div>
+    `).join('');
+  } else {
+    refCard.style.display = 'none';
+  }
+
+  // Flags
+  const order = { good: 1, warn: 2, tip: 3 };
+  const sortedFlags = result.flags.slice().sort((a, b) => order[a.type] - order[b.type]);
+  const flagEl = document.getElementById('coachFlags');
+  if (sortedFlags.length === 0) {
+    flagEl.innerHTML = '<div class="muted" style="text-align: center; padding: 16px; font-size: 13px;">짚을 점이 없어요. 잘하고 있어요!</div>';
+  } else {
+    flagEl.innerHTML = sortedFlags.map(f => {
+      const icon = f.type === 'good' ? '✓' : (f.type === 'warn' ? '⚠' : '💡');
+      return `<div class="flag-item ${f.type}"><span class="flag-icon">${icon}</span><span>${f.text}</span></div>`;
+    }).join('');
+  }
+}
+
+/* ============================================================
+   EXCHANGE RATE
+   ============================================================ */
+async function fetchRateFromApi() {
+  try {
+    const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=KRW');
+    if (!r.ok) throw new Error('rate fetch failed');
+    const data = await r.json();
+    return data.rates.KRW;
+  } catch (e) { return null; }
+}
+async function refreshRate(force = false) {
+  const rate = await api.getRate();
+  if (rate.manual && !force) { CURRENT_RATE = rate.value; updateRateUI(rate); return; }
+  const now = Date.now();
+  const stale = !rate.updatedAt || (now - new Date(rate.updatedAt).getTime() > 6 * 60 * 60 * 1000);
+  if (force || stale || !rate.value) {
+    const fetched = await fetchRateFromApi();
+    if (fetched) await api.saveRate({ value: fetched, manual: false, updatedAt: new Date().toISOString() });
+  }
+  const final = await api.getRate();
+  CURRENT_RATE = final.value || 1350;
+  updateRateUI(final);
+}
+function updateRateUI(rate) {
+  document.getElementById('rateDisplay').textContent = (rate.value || 0).toFixed(2);
+  document.getElementById('inputRate').value = (rate.value || 0).toFixed(2);
+  document.getElementById('rateMode').textContent = rate.manual ? '수동' : '자동';
+  document.getElementById('rateMode').className = 'badge ' + (rate.manual ? 'warn' : 'live');
+  document.getElementById('rateUpdated').textContent = rate.updatedAt ? new Date(rate.updatedAt).toLocaleString('ko-KR') : '—';
+}
+
+/* ============================================================
+   EDIT MODE + IMPULSE CHECK
+   ============================================================ */
+let editingTransaction = null; // { id, type }
+let editingDividend = null; // { id }
+
+async function startEditTransaction(id, type) {
+  const list = type === 'buy' ? await api.getPurchases() : await api.getSells();
+  const tx = list.find(t => t.id === id);
+  if (!tx) return;
+  editingTransaction = { id, type };
+  const f = document.getElementById('formTransaction');
+  f.type.value = type;
+  f.symbol.value = tx.symbol;
+  f.shares.value = tx.shares;
+  f.price.value = tx.price;
+  f.date.value = tx.date;
+  f.memo.value = tx.memo || '';
+  document.getElementById('txFormTitle').textContent = `수정: ${tx.symbol.toUpperCase()} ${tx.date}`;
+  document.getElementById('txEditCancel').classList.add('active');
+  document.getElementById('txSubmitBtn').textContent = '수정 완료';
+  updateStarUI(f.symbol, document.getElementById('starTx'));
+  switchTab('transactions');
+  setTimeout(() => f.symbol.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+}
+
+function cancelEditTransaction() {
+  editingTransaction = null;
+  const f = document.getElementById('formTransaction');
+  f.reset();
+  f.type.value = 'buy';
+  f.date.value = new Date().toISOString().slice(0, 10);
+  document.getElementById('txFormTitle').textContent = '새 거래';
+  document.getElementById('txEditCancel').classList.remove('active');
+  document.getElementById('txSubmitBtn').textContent = '기록';
+  updateStarUI(f.symbol, document.getElementById('starTx'));
+}
+
+async function startEditDividend(id) {
+  const dividends = await api.getDividends();
+  const d = dividends.find(x => x.id === id);
+  if (!d) return;
+  editingDividend = { id };
+  const f = document.getElementById('formDividend');
+  f.symbol.value = d.symbol;
+  f.amount.value = d.amount;
+  f.date.value = d.date;
+  f.memo.value = d.memo || '';
+  document.getElementById('divFormTitle').textContent = `수정: ${d.symbol.toUpperCase()} ${d.date}`;
+  document.getElementById('divEditCancel').classList.add('active');
+  document.getElementById('divSubmitBtn').textContent = '수정 완료';
+  updateStarUI(f.symbol, document.getElementById('starDiv'));
+  switchTab('dividends');
+  setTimeout(() => f.symbol.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+}
+
+function cancelEditDividend() {
+  editingDividend = null;
+  const f = document.getElementById('formDividend');
+  f.reset();
+  f.date.value = new Date().toISOString().slice(0, 10);
+  document.getElementById('divFormTitle').textContent = '배당금 기록';
+  document.getElementById('divEditCancel').classList.remove('active');
+  document.getElementById('divSubmitBtn').textContent = '기록';
+  updateStarUI(f.symbol, document.getElementById('starDiv'));
+}
+
+async function checkImpulseBuy(payload) {
+  const purchases = await api.getPurchases();
+  const today = new Date();
+  const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+  const recentBuys = purchases.filter(p => p.date && new Date(p.date) >= oneYearAgo);
+  if (recentBuys.length < 3) return null;
+
+  const newAmount = payload.shares * payload.price;
+  const reasons = [];
+
+  // Check 1: amount > 3x median
+  const buyAmounts = recentBuys.map(p => Number(p.shares) * Number(p.price));
+  const sorted = [...buyAmounts].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  if (median > 0 && newAmount > median * 3) {
+    reasons.push(`이번 매수액 <strong>${fmtUSD0(newAmount)}</strong>는 평소 매수액 중간값 ${fmtUSD0(median)}의 <strong>${(newAmount / median).toFixed(1)}배</strong>예요.`);
+  }
+
+  // Check 2: same ticker 3+ in 7 days (including this one)
+  const newDate = new Date(payload.date);
+  const sameTickerWithin7 = recentBuys.filter(p => {
+    if (p.symbol.toUpperCase() !== payload.symbol.toUpperCase()) return false;
+    if (!p.date) return false;
+    const days = Math.abs((newDate - new Date(p.date)) / (1000 * 60 * 60 * 24));
+    return days <= 7;
+  });
+  if (sameTickerWithin7.length >= 2) {
+    reasons.push(`<strong>${payload.symbol.toUpperCase()}</strong>을(를) 최근 7일 내 ${sameTickerWithin7.length}번 매수했어요. 이번이 ${sameTickerWithin7.length + 1}번째.`);
+  }
+
+  return reasons.length > 0 ? reasons : null;
+}
+
+function showImpulseModal(reasons) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('impulseModal');
+    document.getElementById('impulseReasons').innerHTML = reasons.map(r => '<li>' + r + '</li>').join('');
+    modal.classList.add('open');
+    const cancel = document.getElementById('impulseCancel');
+    const proceed = document.getElementById('impulseProceed');
+    const cleanup = () => {
+      modal.classList.remove('open');
+      cancel.onclick = null;
+      proceed.onclick = null;
+    };
+    cancel.onclick = () => { cleanup(); resolve(false); };
+    proceed.onclick = () => { cleanup(); resolve(true); };
+  });
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => { switchTab(btn.dataset.tab); });
+});
+
+document.getElementById('btnTheme').addEventListener('click', () => {
+  const cur = getThemePref();
+  const next = cur === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme();
+});
+document.querySelectorAll('#themeSeg button').forEach(b => {
+  b.addEventListener('click', () => { localStorage.setItem(THEME_KEY, b.dataset.themePref); applyTheme(); });
+});
+
+// Gist
+document.getElementById('btnGistSave').addEventListener('click', async () => {
+  const token = document.getElementById('inputGistToken').value.trim();
+  const gistId = document.getElementById('inputGistId').value.trim();
+  if (!token || !gistId) { alert('토큰과 Gist ID 모두 입력하세요'); return; }
+  localStorage.setItem(GIST_TOKEN_KEY, token);
+  localStorage.setItem(GIST_ID_KEY, gistId);
+  try {
+    await initGistSync();
+    alert('연결 성공! 동기화가 시작됩니다.');
+  } catch (e) { alert('연결 실패: ' + e.message); }
+});
+document.getElementById('btnGistCreate').addEventListener('click', async () => {
+  const token = document.getElementById('inputGistToken').value.trim();
+  if (!token) { alert('먼저 토큰을 입력하세요'); return; }
+  localStorage.setItem(GIST_TOKEN_KEY, token);
+  try {
+    const id = await gistCreate();
+    document.getElementById('inputGistId').value = id;
+    updateSyncUI();
+    alert('새 Gist 생성됨: ' + id);
+  } catch (e) { alert('생성 실패: ' + e.message); }
+});
+document.getElementById('btnGistPull').addEventListener('click', async () => {
+  const updated = await checkRemoteUpdates();
+  if (!updated) alert('이미 최신 상태입니다.');
+});
+document.getElementById('btnGistPush').addEventListener('click', async () => {
+  try { await gistPushData(loadStore()); alert('업로드 완료'); }
+  catch (e) { alert('실패: ' + e.message); }
+});
+document.getElementById('btnGistClear').addEventListener('click', () => {
+  if (confirm('Gist 연결을 해제할까요? 데이터는 로컬에 남습니다.')) {
+    localStorage.removeItem(GIST_TOKEN_KEY);
+    localStorage.removeItem(GIST_ID_KEY);
+    document.getElementById('inputGistToken').value = '';
+    document.getElementById('inputGistId').value = '';
+    updateSyncUI();
+  }
+});
+
+// Tax
+document.getElementById('toggleTax').addEventListener('click', async () => {
+  const cur = loadStore().tax;
+  await api.saveTax({ enabled: !cur.enabled });
+  updateTaxUI();
+  await refreshAll();
+});
+document.getElementById('inputTaxRate').addEventListener('change', async (e) => {
+  await api.saveTax({ withholdingPct: parseFloat(e.target.value) || 0 });
+  await refreshAll();
+});
+document.getElementById('inputTaxThreshold').addEventListener('change', async (e) => {
+  await api.saveTax({ annualThresholdKRW: parseFloat(e.target.value) || 0 });
+  await renderDividends();
+});
+
+// Finnhub
+document.getElementById('btnSaveKey').addEventListener('click', async () => {
+  const v = document.getElementById('inputFinnhubKey').value.trim();
+  if (v && v !== '••••••••') {
+    localStorage.setItem(FINNHUB_KEY_STORAGE, v);
+    updateFinnhubStatusUI();
+    await refreshAll();
+    alert('저장됨');
+  }
+});
+document.getElementById('btnTestKey').addEventListener('click', async () => {
+  const q = await fetchQuote('AAPL');
+  if (q && q.price) alert(`연결 OK. AAPL: $${q.price.toFixed(2)}`);
+  else alert('연결 실패. API 키를 확인하세요.');
+});
+document.getElementById('btnClearKey').addEventListener('click', () => {
+  if (confirm('API 키를 삭제할까요?')) {
+    localStorage.removeItem(FINNHUB_KEY_STORAGE);
+    localStorage.removeItem(PRICE_CACHE_KEY);
+    priceCache = {}; pricesUpdatedAt = null;
+    updateFinnhubStatusUI();
+    refreshAll();
+  }
+});
+document.getElementById('btnRefreshPrices').addEventListener('click', async () => {
+  const held = await getHeldTickers();
+  await refreshPrices(held, true);
+  await renderDashboard();
+});
+
+// Forms
+const formTx = document.getElementById('formTransaction');
+formTx.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  const payload = { symbol: f.symbol.value.trim().toUpperCase(), shares: parseFloat(f.shares.value), price: parseFloat(f.price.value), date: f.date.value, memo: f.memo.value.trim() };
+
+  // Impulse check (only for new buys, not edits)
+  if (f.type.value === 'buy' && !editingTransaction) {
+    const reasons = await checkImpulseBuy(payload);
+    if (reasons) {
+      const proceed = await showImpulseModal(reasons);
+      if (!proceed) return;
+    }
+  }
+
+  if (editingTransaction) {
+    const oldType = editingTransaction.type;
+    const newType = f.type.value;
+    if (oldType === newType) {
+      if (newType === 'buy') await api.updatePurchase(editingTransaction.id, payload);
+      else await api.updateSell(editingTransaction.id, payload);
+    } else {
+      // Type changed - delete from old list, add to new
+      if (oldType === 'buy') await api.deletePurchase(editingTransaction.id);
+      else await api.deleteSell(editingTransaction.id);
+      if (newType === 'buy') await api.addPurchase(payload);
+      else await api.addSell(payload);
+    }
+    cancelEditTransaction();
+  } else {
+    if (f.type.value === 'buy') await api.addPurchase(payload); else await api.addSell(payload);
+    const keepType = f.type.value;
+    f.reset(); f.type.value = keepType; f.date.value = new Date().toISOString().slice(0, 10);
+    updateStarUI(f.symbol, document.getElementById('starTx'));
+  }
+  await refreshAll();
+});
+const formDiv = document.getElementById('formDividend');
+formDiv.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  const payload = { symbol: f.symbol.value.trim().toUpperCase(), amount: parseFloat(f.amount.value), date: f.date.value, memo: f.memo.value.trim() };
+  if (editingDividend) {
+    await api.updateDividend(editingDividend.id, payload);
+    cancelEditDividend();
+  } else {
+    await api.addDividend(payload);
+    f.reset(); f.date.value = new Date().toISOString().slice(0, 10);
+    updateStarUI(f.symbol, document.getElementById('starDiv'));
+  }
+  await refreshAll();
+});
+
+// Edit cancel buttons
+document.getElementById('txEditCancel').addEventListener('click', cancelEditTransaction);
+document.getElementById('divEditCancel').addEventListener('click', cancelEditDividend);
+
+// Close impulse modal on backdrop click
+document.getElementById('impulseModal').addEventListener('click', (e) => {
+  if (e.target.id === 'impulseModal') {
+    document.getElementById('impulseCancel').click();
+  }
+});
+
+document.getElementById('pillsTx').addEventListener('click', (e) => {
+  const t = e.target.closest('.ticker-pill'); if (!t) return;
+  formTx.symbol.value = t.dataset.ticker;
+  updateStarUI(formTx.symbol, document.getElementById('starTx'));
+  formTx.shares.focus();
+});
+document.getElementById('pillsDiv').addEventListener('click', (e) => {
+  const t = e.target.closest('.ticker-pill'); if (!t) return;
+  formDiv.symbol.value = t.dataset.ticker;
+  updateStarUI(formDiv.symbol, document.getElementById('starDiv'));
+  formDiv.amount.focus();
+});
+
+function bindStar(inputEl, starEl) {
+  starEl.addEventListener('click', async () => {
+    const sym = (inputEl.value || '').trim().toUpperCase();
+    if (!sym) { alert('티커를 먼저 입력하세요.'); return; }
+    await api.toggleFavorite(sym);
+    updateStarUI(inputEl, starEl);
+    await renderTickerSuggestions(); renderFavManage();
+  });
+  inputEl.addEventListener('input', () => updateStarUI(inputEl, starEl));
+}
+bindStar(formTx.symbol, document.getElementById('starTx'));
+bindStar(formDiv.symbol, document.getElementById('starDiv'));
+
+document.addEventListener('click', async (e) => {
+  const rem = e.target.getAttribute && e.target.getAttribute('data-rem-fav');
+  const editTx = e.target.getAttribute && e.target.getAttribute('data-edit-tx');
+  const editD = e.target.getAttribute && e.target.getAttribute('data-edit-dividend');
+  const delTx = e.target.getAttribute && e.target.getAttribute('data-del-tx');
+  const txType = e.target.getAttribute && e.target.getAttribute('data-tx-type');
+  const delD = e.target.getAttribute && e.target.getAttribute('data-del-dividend');
+  const delSnap = e.target.getAttribute && e.target.getAttribute('data-del-snap');
+  if (rem) {
+    await api.removeFavorite(rem);
+    await renderTickerSuggestions(); renderFavManage();
+    updateStarUI(formTx.symbol, document.getElementById('starTx'));
+    updateStarUI(formDiv.symbol, document.getElementById('starDiv'));
+  } else if (editTx) {
+    await startEditTransaction(editTx, txType);
+  } else if (editD) {
+    await startEditDividend(editD);
+  } else if (delTx) {
+    if (confirm('이 거래 기록을 삭제할까요?')) {
+      if (txType === 'buy') await api.deletePurchase(delTx); else await api.deleteSell(delTx);
+      await refreshAll();
+    }
+  } else if (delD) {
+    if (confirm('이 배당 기록을 삭제할까요?')) { await api.deleteDividend(delD); await refreshAll(); }
+  } else if (delSnap) {
+    if (confirm('이 스냅샷을 삭제할까요?')) { await api.deleteSnapshot(delSnap); await renderGoal(); }
+  }
+});
+
+// Allocation toggle
+document.getElementById('allocationToggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-basis]');
+  if (!btn || btn.disabled) return;
+  setAllocBasis(btn.dataset.basis);
+  renderAllocation();
+});
+
+// Coach style toggle
+document.getElementById('coachStyleSeg').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-coach-style]');
+  if (!btn) return;
+  await api.saveCoachStyle(btn.dataset.coachStyle);
+  await renderCoach();
+});
+
+// Simulator
+let simDebounce = null;
+document.getElementById('simYears').addEventListener('input', (e) => {
+  if (simDebounce) clearTimeout(simDebounce);
+  simDebounce = setTimeout(async () => {
+    const v = Math.max(1, Math.min(50, parseInt(e.target.value) || 20));
+    await api.saveSimulation({ years: v });
+    await renderSimResults();
+  }, 300);
+});
+document.getElementById('btnLoadHoldings').addEventListener('click', prefillSimFromHoldings);
+document.getElementById('btnAddPosition').addEventListener('click', addPositionInteractive);
+document.getElementById('btnClearPositions').addEventListener('click', clearPositions);
+
+// Position card field edits (delegated)
+document.getElementById('simPositions').addEventListener('input', (e) => {
+  const idx = e.target.dataset.posIdx;
+  const field = e.target.dataset.posField;
+  if (idx === undefined || !field) return;
+  if (simDebounce) clearTimeout(simDebounce);
+  simDebounce = setTimeout(() => {
+    updatePositionField(parseInt(idx), field, parseFloat(e.target.value) || 0);
+  }, 300);
+});
+// Position remove (delegated)
+document.getElementById('simPositions').addEventListener('click', (e) => {
+  const idx = e.target.getAttribute('data-remove-pos');
+  if (idx !== null) removePosition(parseInt(idx));
+});
+
+// Goal
+document.getElementById('inputGoalTarget').addEventListener('change', async (e) => { await api.saveGoal({ monthlyKRW: parseFloat(e.target.value) || 0 }); await renderGoal(); await renderSimulation(); });
+document.getElementById('inputGoalYield').addEventListener('change', async (e) => { await api.saveGoal({ yieldPct: parseFloat(e.target.value) || 0 }); await renderGoal(); });
+document.getElementById('btnSnapshot').addEventListener('click', async () => {
+  await takeSnapshot(false);
+  await renderGoal();
+});
+
+// Rate
+document.getElementById('inputRate').addEventListener('change', async (e) => {
+  const v = parseFloat(e.target.value);
+  if (v > 0) { await api.saveRate({ value: v, manual: true, updatedAt: new Date().toISOString() }); CURRENT_RATE = v; updateRateUI(await api.getRate()); await refreshAll(); }
+});
+document.getElementById('btnRateAuto').addEventListener('click', async () => { await api.saveRate({ manual: false }); await refreshRate(true); await refreshAll(); });
+document.getElementById('btnRefreshRate').addEventListener('click', async () => { await refreshRate(true); await refreshAll(); });
+
+// Data
+document.getElementById('btnExport').addEventListener('click', async () => {
+  const data = await api.exportAll();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = 'portfolio-journal-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click(); URL.revokeObjectURL(url);
+});
+document.getElementById('fileImport').addEventListener('change', async (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  const text = await file.text();
+  try {
+    const data = JSON.parse(text);
+    if (confirm('현재 데이터를 덮어쓰고 가져올까요?')) {
+      await api.importAll(data); await refreshRate(); await refreshAll(); renderFavManage();
+      alert('가져왔어요.');
+    }
+  } catch (err) { alert('실패: ' + err.message); }
+  e.target.value = '';
+});
+document.getElementById('btnReset').addEventListener('click', async () => {
+  if (confirm('정말 모든 기록을 삭제할까요?')) {
+    await api.reset(); await refreshRate(); await refreshAll(); renderFavManage();
+  }
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+(async function init() {
+  applyTheme();
+  loadPriceCache();
+  const today = new Date().toISOString().slice(0, 10);
+  document.querySelectorAll('input[type="date"]').forEach(i => i.value = today);
+  document.getElementById('headerDate').textContent = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+  // Pre-fill gist inputs (but mask token)
+  if (getGistToken()) document.getElementById('inputGistToken').value = '••••••••';
+  if (getGistId()) document.getElementById('inputGistId').value = getGistId();
+
+  await refreshRate();
+  await initGistSync();
+  updateFinnhubStatusUI();
+  updateTaxUI();
+  await refreshAll();
+  await takeSnapshot(true); // auto-snapshot if not done this month
+  await renderGoal();
+  renderFavManage();
+  updateStarUI(formTx.symbol, document.getElementById('starTx'));
+  updateStarUI(formDiv.symbol, document.getElementById('starDiv'));
+})();
+</script>
+</body>
+</html>
