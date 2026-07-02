@@ -433,7 +433,7 @@
       <div id="priceStatus" style="display: none;">시세 <span class="rate" id="priceUpdated">—</span> <button class="btn-link" id="btnRefreshPrices">새로고침</button></div>
       <div class="seg" id="currencyToggle" style="margin-top: 4px;">
         <button data-currency="USD">USD</button>
-        <button data-currency="KRW">₩</button>
+        <button data-currency="KRW">원</button>
       </div>
     </div>
   </header>
@@ -461,7 +461,7 @@
       <div class="stat">
         <div class="label">평가금액</div>
         <div class="value display num"><span id="statValue">$0</span></div>
-        <div class="sub" id="statValueKRW">₩0</div>
+        <div class="sub" id="statValueKRW">0원</div>
       </div>
       <div class="stat">
         <div class="label">미실현 손익</div>
@@ -471,12 +471,12 @@
       <div class="stat">
         <div class="label">받은 배당금</div>
         <div class="value display num"><span id="statDividends">$0</span></div>
-        <div class="sub" id="statDividendsKRW">₩0</div>
+        <div class="sub" id="statDividendsKRW">0원</div>
       </div>
       <div class="stat">
         <div class="label">실현 손익</div>
         <div class="value display num"><span id="statRealized">$0</span></div>
-        <div class="sub" id="statRealizedKRW">₩0</div>
+        <div class="sub" id="statRealizedKRW">0원</div>
       </div>
     </div>
 
@@ -571,7 +571,7 @@
       <div class="section-head"><div class="section-title">배당 이력</div><div class="section-note"><span id="dividendCount">0</span>건</div></div>
       <table>
         <thead id="dividendsHead">
-          <tr><th>티커</th><th>지급일</th><th class="right">금액 ($)</th><th class="right">금액 (₩)</th><th>메모</th><th></th></tr>
+          <tr><th>티커</th><th>지급일</th><th class="right">금액 ($)</th><th class="right">금액 (원)</th><th>메모</th><th></th></tr>
         </thead>
         <tbody id="dividendsBody"></tbody>
       </table>
@@ -582,17 +582,17 @@
   <section class="panel" id="panel-goal">
     <div class="goal-hero">
       <div class="eyebrow">월 배당 목표</div>
-      <div class="big"><span id="goalCurrent">₩0</span> <span class="of">/ <span id="goalTarget">₩1,000,000</span></span></div>
+      <div class="big"><span id="goalCurrent">0원</span> <span class="of">/ <span id="goalTarget">1,000,000원</span></span></div>
       <div class="meta" id="goalBasis">최근 12개월 월평균 배당 기준</div>
       <div class="progress"><div class="progress-fill" id="goalProgressFill" style="width: 0%;"></div></div>
-      <div class="progress-labels"><span id="goalProgressPct">0%</span><span id="goalGap">남은 목표: ₩1,000,000</span></div>
+      <div class="progress-labels"><span id="goalProgressPct">0%</span><span id="goalGap">남은 목표: 1,000,000원</span></div>
       <div class="goal-grid">
-        <div class="goal-card"><div class="l">지난 달 실제</div><div class="v" id="goalLastMonth">₩0</div><div class="s" id="goalLastMonthUSD">$0</div></div>
-        <div class="goal-card"><div class="l">전체 월평균</div><div class="v" id="goalAllTime">₩0</div><div class="s" id="goalAllTimeUSD">$0</div></div>
+        <div class="goal-card"><div class="l">지난 달 실제</div><div class="v" id="goalLastMonth">0원</div><div class="s" id="goalLastMonthUSD">$0</div></div>
+        <div class="goal-card"><div class="l">전체 월평균</div><div class="v" id="goalAllTime">0원</div><div class="s" id="goalAllTimeUSD">$0</div></div>
         <div class="goal-card"><div class="l">추가 필요 투자금</div><div class="v" id="goalNeeded">—</div><div class="s">예상 배당 수익률 기준</div></div>
       </div>
       <div class="goal-settings">
-        <div class="field"><label>월 배당 목표 (₩)</label><input type="number" id="inputGoalTarget" step="10000" min="0" inputmode="numeric" /></div>
+        <div class="field"><label>월 배당 목표 (원)</label><input type="number" id="inputGoalTarget" step="10000" min="0" inputmode="numeric" /></div>
         <div class="field"><label>예상 배당 수익률 (% / 연)</label><input type="number" id="inputGoalYield" step="0.1" min="0" inputmode="decimal" /></div>
       </div>
     </div>
@@ -613,7 +613,7 @@
         <canvas id="chartProgress"></canvas>
       </div>
       <table style="margin-top: 16px;">
-        <thead><tr><th>날짜</th><th class="right">월평균 (₩)</th><th class="right">목표 (₩)</th><th class="right">달성률</th><th class="right">보유</th><th></th></tr></thead>
+        <thead><tr><th>날짜</th><th class="right">월평균 (원)</th><th class="right">목표 (원)</th><th class="right">달성률</th><th class="right">보유</th><th></th></tr></thead>
         <tbody id="progressBody"></tbody>
       </table>
     </div>
@@ -637,7 +637,7 @@
 
     <div class="goal-hero sim-hero">
       <div class="eyebrow" id="simEyebrow">N년 후 월 배당</div>
-      <div class="big"><span id="simBigKRW">₩0</span></div>
+      <div class="big"><span id="simBigKRW">0원</span></div>
       <div class="meta" id="simBigUSD" style="margin-top: 4px;">$0 / 월</div>
       <div id="simGoalStatus" style="margin-top: 16px;"></div>
     </div>
@@ -646,22 +646,22 @@
       <div class="stat">
         <div class="label">최종 자산가치</div>
         <div class="value display num"><span id="simStatValue">$0</span></div>
-        <div class="sub" id="simStatValueKRW">₩0</div>
+        <div class="sub" id="simStatValueKRW">0원</div>
       </div>
       <div class="stat">
         <div class="label">DRIP 효과 vs 비DRIP</div>
         <div class="value display num pos"><span id="simStatDrip">+$0</span></div>
-        <div class="sub pos" id="simStatDripKRW">+₩0</div>
+        <div class="sub pos" id="simStatDripKRW">+0원</div>
       </div>
       <div class="stat">
         <div class="label">누적 받은 배당</div>
         <div class="value display num"><span id="simStatTotalDiv">$0</span></div>
-        <div class="sub" id="simStatTotalDivKRW">₩0</div>
+        <div class="sub" id="simStatTotalDivKRW">0원</div>
       </div>
       <div class="stat">
         <div class="label">총 투입금</div>
         <div class="value display num"><span id="simStatInvested">$0</span></div>
-        <div class="sub" id="simStatInvestedKRW">₩0</div>
+        <div class="sub" id="simStatInvestedKRW">0원</div>
       </div>
     </div>
 
@@ -695,7 +695,7 @@
     <div class="card" style="margin-top: 24px;">
       <div class="section-title" style="margin-bottom: 12px;">연도별 상세</div>
       <table>
-        <thead><tr><th>년차</th><th class="right">자산 ($)</th><th class="right">자산 (₩)</th><th class="right">월 배당 (₩)</th><th class="right">누적 배당 ($)</th></tr></thead>
+        <thead><tr><th>년차</th><th class="right">자산 ($)</th><th class="right">자산 (원)</th><th class="right">월 배당 (원)</th><th class="right">누적 배당 ($)</th></tr></thead>
         <tbody id="simTableBody"></tbody>
       </table>
     </div>
@@ -813,7 +813,7 @@
         <div class="val"><input type="number" id="inputTaxRate" step="0.1" min="0" max="100" inputmode="decimal" /></div>
       </div>
       <div class="settings-row">
-        <div class="lbl">연 종합과세 임계값 (₩)</div>
+        <div class="lbl">연 종합과세 임계값 (원)</div>
         <div class="val"><input type="number" id="inputTaxThreshold" step="1000000" min="0" inputmode="numeric" /></div>
       </div>
     </div>
@@ -1251,18 +1251,18 @@ let CURRENT_RATE = 1350;
 const CURRENCY_KEY = 'portfolio_display_currency';
 let DISPLAY_CURRENCY = localStorage.getItem(CURRENCY_KEY) || 'USD';
 const fmtUSD = (n) => {
-  if (DISPLAY_CURRENCY === 'KRW') return '₩' + Math.round((Number(n) || 0) * CURRENT_RATE).toLocaleString('ko-KR');
+  if (DISPLAY_CURRENCY === 'KRW') return Math.round((Number(n) || 0) * CURRENT_RATE).toLocaleString('ko-KR') + '원';
   return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 const fmtUSD0 = (n) => {
-  if (DISPLAY_CURRENCY === 'KRW') return '₩' + Math.round((Number(n) || 0) * CURRENT_RATE).toLocaleString('ko-KR');
+  if (DISPLAY_CURRENCY === 'KRW') return Math.round((Number(n) || 0) * CURRENT_RATE).toLocaleString('ko-KR') + '원';
   return '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 };
 const fmtUSDraw = (n) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmtKRW = (usd) => '₩' + Math.round((Number(usd) || 0) * CURRENT_RATE).toLocaleString('ko-KR');
-const fmtKRWraw = (krw) => '₩' + Math.round(Number(krw) || 0).toLocaleString('ko-KR');
+const fmtKRW = (usd) => Math.round((Number(usd) || 0) * CURRENT_RATE).toLocaleString('ko-KR') + '원';
+const fmtKRWraw = (krw) => Math.round(Number(krw) || 0).toLocaleString('ko-KR') + '원';
 const fmtShares = (n) => (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 4 }) + '주';
-const currencySymbol = () => DISPLAY_CURRENCY === 'KRW' ? '₩' : '$';
+const currencySymbol = () => DISPLAY_CURRENCY === 'KRW' ? '원' : '$';
 const fmtSecondary = (usdAmount) => DISPLAY_CURRENCY === 'KRW' ? fmtUSDraw(usdAmount) : fmtKRW(usdAmount);
 const fmtNum = (n, d = 4) => (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: d });
 const fmtPct = (n) => (Number(n) || 0).toFixed(2) + '%';
@@ -1513,7 +1513,7 @@ async function renderSimResults() {
   if (result.length === 0) {
     // Empty state
     document.getElementById('simEyebrow').textContent = `${sim.years || 20}년 후 월 배당`;
-    document.getElementById('simBigKRW').textContent = '₩0';
+    document.getElementById('simBigKRW').textContent = '0원';
     document.getElementById('simBigUSD').textContent = '$0 / 월';
     document.getElementById('simGoalStatus').innerHTML = '<div class="insight warn">포지션을 추가하면 시뮬레이션 결과가 표시됩니다.</div>';
     ['simStatValue', 'simStatDrip', 'simStatTotalDiv', 'simStatInvested'].forEach(id => document.getElementById(id).textContent = '—');
@@ -1577,13 +1577,13 @@ async function renderSimResults() {
     data: {
       labels,
       datasets: [
-        { type: 'bar', label: '월 배당 (₩)', data: result.map(y => y.annualDividendA / 12 * CURRENT_RATE), backgroundColor: c.accent, borderRadius: 3, maxBarThickness: 24, order: 2 },
-        { type: 'line', label: '목표 (₩)', data: result.map(() => targetMonthlyKRW), borderColor: c.warn, borderWidth: 2, borderDash: [4, 4], pointRadius: 0, fill: false, order: 1 }
+        { type: 'bar', label: '월 배당 (원)', data: result.map(y => y.annualDividendA / 12 * CURRENT_RATE), backgroundColor: c.accent, borderRadius: 3, maxBarThickness: 24, order: 2 },
+        { type: 'line', label: '목표 (원)', data: result.map(() => targetMonthlyKRW), borderColor: c.warn, borderWidth: 2, borderDash: [4, 4], pointRadius: 0, fill: false, order: 1 }
       ]
     },
     options: { responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12 } }, tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ' + fmtKRWraw(ctx.parsed.y) } } },
-      scales: { x: { grid: { display: false }, border: { color: c.border } }, y: { grid: { color: c.border }, border: { display: false }, ticks: { callback: v => '₩' + (v / 10000).toFixed(0) + '만' } } }
+      scales: { x: { grid: { display: false }, border: { color: c.border } }, y: { grid: { color: c.border }, border: { display: false }, ticks: { callback: v => (v / 10000).toFixed(0) + '만원' } } }
     }
   });
 
@@ -1608,8 +1608,8 @@ async function renderSimResults() {
   tbody.innerHTML = result.map(y => `<tr>
     <td class="ticker-cell" data-label="">${y.year}년</td>
     <td class="right num" data-label="자산 ($)">${fmtUSD0(y.assetValueA)}</td>
-    <td class="right num muted" data-label="자산 (₩)">${fmtKRW(y.assetValueA)}</td>
-    <td class="right num pos" data-label="월 배당 (₩)">${fmtKRW(y.annualDividendA / 12)}</td>
+    <td class="right num muted" data-label="자산 (원)">${fmtKRW(y.assetValueA)}</td>
+    <td class="right num pos" data-label="월 배당 (원)">${fmtKRW(y.annualDividendA / 12)}</td>
     <td class="right num muted" data-label="누적 배당">${fmtUSD0(y.cumDividendsA)}</td>
   </tr>`).join('');
 }
@@ -1797,9 +1797,9 @@ async function renderDividends() {
   // Update header
   const head = document.getElementById('dividendsHead');
   if (taxOn) {
-    head.innerHTML = '<tr><th>티커</th><th>지급일</th><th class="right">세전 ($)</th><th class="right">세금 ($)</th><th class="right">세후 ($)</th><th class="right">세후 (₩)</th><th>메모</th><th></th></tr>';
+    head.innerHTML = '<tr><th>티커</th><th>지급일</th><th class="right">세전 ($)</th><th class="right">세금 ($)</th><th class="right">세후 ($)</th><th class="right">세후 (원)</th><th>메모</th><th></th></tr>';
   } else {
-    head.innerHTML = '<tr><th>티커</th><th>지급일</th><th class="right">금액 ($)</th><th class="right">금액 (₩)</th><th>메모</th><th></th></tr>';
+    head.innerHTML = '<tr><th>티커</th><th>지급일</th><th class="right">금액 ($)</th><th class="right">금액 (원)</th><th>메모</th><th></th></tr>';
   }
 
   const tbody = document.getElementById('dividendsBody');
@@ -1814,7 +1814,7 @@ async function renderDividends() {
         <td class="right num" data-label="세전 ($)">${fmtUSD(g)}</td>
         <td class="right num muted" data-label="세금 ($)">${fmtUSD(t)}</td>
         <td class="right num pos" data-label="세후 ($)">${fmtUSD(n)}</td>
-        <td class="right num muted" data-label="세후 (₩)">${fmtKRW(n)}</td>
+        <td class="right num muted" data-label="세후 (원)">${fmtKRW(n)}</td>
         <td class="muted" data-label="메모">${d.memo || ''}</td>
         <td class="right" data-label=""><button class="btn-icon" data-edit-dividend="${d.id}" style="color: var(--accent);">수정</button><button class="btn-icon" data-del-dividend="${d.id}">삭제</button></td>
       </tr>`;
@@ -1824,7 +1824,7 @@ async function renderDividends() {
       <td class="ticker-cell" data-label="" style="font-family: 'Inter'; font-weight: 600;">${d.symbol.toUpperCase()}</td>
       <td class="muted num" data-label="지급일">${fmtDate(d.date)}</td>
       <td class="right num pos" data-label="금액 ($)">${fmtUSD(d.amount)}</td>
-      <td class="right num muted" data-label="금액 (₩)">${fmtKRW(d.amount)}</td>
+      <td class="right num muted" data-label="금액 (원)">${fmtKRW(d.amount)}</td>
       <td class="muted" data-label="메모">${d.memo || ''}</td>
       <td class="right" data-label=""><button class="btn-icon" data-edit-dividend="${d.id}" style="color: var(--accent);">수정</button><button class="btn-icon" data-del-dividend="${d.id}">삭제</button></td>
     </tr>`).join('');
@@ -1989,13 +1989,13 @@ function renderProgressLog(log, targetKRW) {
     data: {
       labels,
       datasets: [
-        { type: 'line', label: '월평균 배당 (₩)', data: sorted.map(s => s.avgMonthlyKRW), borderColor: c.accent, backgroundColor: c.accent + '20', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 3, pointBackgroundColor: c.accent, order: 1 },
-        { type: 'line', label: '목표 (₩)', data: sorted.map(s => s.targetKRW), borderColor: c.warn, borderWidth: 2, borderDash: [4, 4], pointRadius: 0, fill: false, order: 2 }
+        { type: 'line', label: '월평균 배당 (원)', data: sorted.map(s => s.avgMonthlyKRW), borderColor: c.accent, backgroundColor: c.accent + '20', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 3, pointBackgroundColor: c.accent, order: 1 },
+        { type: 'line', label: '목표 (원)', data: sorted.map(s => s.targetKRW), borderColor: c.warn, borderWidth: 2, borderDash: [4, 4], pointRadius: 0, fill: false, order: 2 }
       ]
     },
     options: { responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12 } }, tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ₩' + ctx.parsed.y.toLocaleString() } } },
-      scales: { x: { grid: { display: false }, border: { color: c.border } }, y: { grid: { color: c.border }, border: { display: false }, ticks: { callback: v => '₩' + (v / 10000) + '만' } } }
+      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12 } }, tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString() + '원' } } },
+      scales: { x: { grid: { display: false }, border: { color: c.border } }, y: { grid: { color: c.border }, border: { display: false }, ticks: { callback: v => (v / 10000) + '만원' } } }
     }
   });
 
@@ -2009,8 +2009,8 @@ function renderProgressLog(log, targetKRW) {
     const pct = s.targetKRW > 0 ? (s.avgMonthlyKRW / s.targetKRW) * 100 : 0;
     return `<tr>
       <td class="muted num" data-label="날짜">${s.date} ${s.auto ? '<span class="badge" style="margin-left: 4px;">자동</span>' : ''}</td>
-      <td class="right num" data-label="월평균 (₩)">${fmtKRWraw(s.avgMonthlyKRW)}</td>
-      <td class="right num muted" data-label="목표 (₩)">${fmtKRWraw(s.targetKRW)}</td>
+      <td class="right num" data-label="월평균 (원)">${fmtKRWraw(s.avgMonthlyKRW)}</td>
+      <td class="right num muted" data-label="목표 (원)">${fmtKRWraw(s.targetKRW)}</td>
       <td class="right num" data-label="달성률">${pct.toFixed(1)}%</td>
       <td class="right num muted" data-label="보유">${s.holdings}</td>
       <td class="right" data-label=""><button class="btn-icon" data-del-snap="${s.id}">삭제</button></td>
