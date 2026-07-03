@@ -312,6 +312,7 @@
   .seg button:last-child { border-right: none; }
   .seg button.active { background: var(--text); color: var(--bg); }
   .seg button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .seg.seg-mini button { padding: 2px 7px; font-size: 10px; font-weight: 600; line-height: 1.2; }
 
   .toggle-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
   .toggle { position: relative; width: 38px; height: 20px; background: var(--border-strong); border-radius: 10px; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
@@ -522,7 +523,14 @@
           <div class="field"><label>유형</label><select name="type"><option value="buy">매수</option><option value="sell">매도</option></select></div>
           <div class="field"><label>티커 <button type="button" class="star-btn" id="starTx">☆</button></label><input type="text" name="symbol" class="ticker-input" placeholder="AAPL" list="tickerList" required /></div>
           <div class="field"><label>수량</label><input type="number" name="shares" step="0.0001" min="0" inputmode="decimal" required /></div>
-          <div class="field"><label>단가 ($)</label><input type="number" name="price" step="0.01" min="0" inputmode="decimal" required /></div>
+          <div class="field">
+            <label>단가 <span class="seg seg-mini" id="txPriceCurr">
+              <button type="button" data-curr="USD" class="active">$</button>
+              <button type="button" data-curr="KRW">원</button>
+            </span></label>
+            <input type="number" name="price" step="0.01" min="0" inputmode="decimal" required />
+            <div class="help muted" id="txPriceHint" style="margin: 4px 0 0; font-size: 11px; min-height: 14px;"></div>
+          </div>
           <div class="field"><label>날짜</label><input type="date" name="date" required /></div>
           <div class="field"><label>메모</label><input type="text" name="memo" placeholder="(선택)" /></div>
           <button type="submit" class="btn" id="txSubmitBtn">기록</button>
@@ -1258,6 +1266,8 @@ const api = {
 let CURRENT_RATE = 1350;
 const CURRENCY_KEY = 'portfolio_display_currency';
 let DISPLAY_CURRENCY = localStorage.getItem(CURRENCY_KEY) || 'USD';
+const TX_PRICE_CURR_KEY = 'portfolio_tx_price_currency';
+let TX_PRICE_CURRENCY = localStorage.getItem(TX_PRICE_CURR_KEY) || 'USD';
 const fmtUSD = (n) => {
   if (DISPLAY_CURRENCY === 'KRW') return Math.round((Number(n) || 0) * CURRENT_RATE).toLocaleString('ko-KR') + '원';
   return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -2672,6 +2682,9 @@ async function startEditTransaction(id, type) {
   f.type.value = type;
   f.symbol.value = tx.symbol;
   f.shares.value = tx.shares;
+  // Stored price is USD; reset toggle to USD so the shown value matches storage
+  TX_PRICE_CURRENCY = 'USD';
+  localStorage.setItem(TX_PRICE_CURR_KEY, 'USD');
   f.price.value = tx.price;
   f.date.value = tx.date;
   f.memo.value = tx.memo || '';
@@ -2679,6 +2692,7 @@ async function startEditTransaction(id, type) {
   document.getElementById('txEditCancel').classList.add('active');
   document.getElementById('txSubmitBtn').textContent = '수정 완료';
   updateStarUI(f.symbol, document.getElementById('starTx'));
+  updateTxPriceCurrencyUI();
   switchTab('transactions');
   setTimeout(() => f.symbol.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
 }
@@ -2693,6 +2707,7 @@ function cancelEditTransaction() {
   document.getElementById('txEditCancel').classList.remove('active');
   document.getElementById('txSubmitBtn').textContent = '기록';
   updateStarUI(f.symbol, document.getElementById('starTx'));
+  updateTxPriceCurrencyUI();
 }
 
 async function startEditDividend(id) {
@@ -2879,13 +2894,61 @@ document.getElementById('btnRefreshPrices').addEventListener('click', async () =
 });
 
 // Forms
+/* ---- Transaction price currency toggle ---- */
+function updateTxPriceCurrencyUI() {
+  document.querySelectorAll('#txPriceCurr button').forEach(b =>
+    b.classList.toggle('active', b.dataset.curr === TX_PRICE_CURRENCY)
+  );
+  const priceInput = document.querySelector('#formTransaction input[name="price"]');
+  if (priceInput) {
+    if (TX_PRICE_CURRENCY === 'KRW') {
+      priceInput.placeholder = '50,000';
+      priceInput.step = '1';
+    } else {
+      priceInput.placeholder = '150.00';
+      priceInput.step = '0.01';
+    }
+  }
+  updateTxPriceHint();
+}
+async function updateTxPriceHint() {
+  const hintEl = document.getElementById('txPriceHint');
+  if (!hintEl) return;
+  const f = document.getElementById('formTransaction');
+  const raw = parseFloat(f.price.value);
+  if (!raw || raw <= 0) { hintEl.textContent = ''; return; }
+  const date = f.date.value;
+  const rate = date ? await getRateForDate(date) : CURRENT_RATE;
+  if (TX_PRICE_CURRENCY === 'KRW') {
+    const usd = raw / rate;
+    hintEl.textContent = `≈ $${usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} · 환율 ${Math.round(rate).toLocaleString('ko-KR')}원`;
+  } else {
+    const krw = raw * rate;
+    hintEl.textContent = `≈ ${Math.round(krw).toLocaleString('ko-KR')}원 · 환율 ${Math.round(rate).toLocaleString('ko-KR')}원`;
+  }
+}
+document.querySelectorAll('#txPriceCurr button').forEach(b => {
+  b.addEventListener('click', () => {
+    TX_PRICE_CURRENCY = b.dataset.curr;
+    localStorage.setItem(TX_PRICE_CURR_KEY, TX_PRICE_CURRENCY);
+    updateTxPriceCurrencyUI();
+  });
+});
+
 const formTx = document.getElementById('formTransaction');
+formTx.querySelector('input[name="price"]').addEventListener('input', updateTxPriceHint);
+formTx.querySelector('input[name="date"]').addEventListener('change', updateTxPriceHint);
+
 formTx.addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = e.target;
-  const payload = { symbol: f.symbol.value.trim().toUpperCase(), shares: parseFloat(f.shares.value), price: parseFloat(f.price.value), date: f.date.value, memo: f.memo.value.trim() };
+  const rawPrice = parseFloat(f.price.value);
   // Save exchange rate at time of transaction (historical if past date, current otherwise)
-  payload.rate = await getRateForDate(payload.date);
+  const rate = await getRateForDate(f.date.value);
+  // If user entered price in KRW, convert to USD for storage (storage is USD-normalized)
+  const priceUSD = TX_PRICE_CURRENCY === 'KRW' ? (rawPrice / rate) : rawPrice;
+  const payload = { symbol: f.symbol.value.trim().toUpperCase(), shares: parseFloat(f.shares.value), price: priceUSD, date: f.date.value, memo: f.memo.value.trim() };
+  payload.rate = rate;
 
   // Impulse check (only for new buys, not edits)
   if (f.type.value === 'buy' && !editingTransaction) {
@@ -2915,6 +2978,7 @@ formTx.addEventListener('submit', async (e) => {
     const keepType = f.type.value;
     f.reset(); f.type.value = keepType; f.date.value = new Date().toISOString().slice(0, 10);
     updateStarUI(f.symbol, document.getElementById('starTx'));
+    updateTxPriceCurrencyUI();
   }
   await refreshAll();
 });
@@ -3156,6 +3220,7 @@ document.getElementById('btnReset').addEventListener('click', async () => {
   await initGistSync();
   updateFinnhubStatusUI();
   updateTaxUI();
+  updateTxPriceCurrencyUI();
   await refreshAll();
   await takeSnapshot(true); // auto-snapshot if not done this month
   await renderGoal();
