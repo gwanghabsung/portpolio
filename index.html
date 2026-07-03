@@ -312,7 +312,6 @@
   .seg button:last-child { border-right: none; }
   .seg button.active { background: var(--text); color: var(--bg); }
   .seg button:disabled { opacity: 0.4; cursor: not-allowed; }
-  .seg.seg-mini button { padding: 2px 7px; font-size: 10px; font-weight: 600; line-height: 1.2; }
 
   .toggle-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
   .toggle { position: relative; width: 38px; height: 20px; background: var(--border-strong); border-radius: 10px; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
@@ -524,10 +523,7 @@
           <div class="field"><label>티커 <button type="button" class="star-btn" id="starTx">☆</button></label><input type="text" name="symbol" class="ticker-input" placeholder="AAPL" list="tickerList" required /></div>
           <div class="field"><label>수량</label><input type="number" name="shares" step="0.0001" min="0" inputmode="decimal" required /></div>
           <div class="field">
-            <label>단가 <span class="seg seg-mini" id="txPriceCurr">
-              <button type="button" data-curr="USD" class="active">$</button>
-              <button type="button" data-curr="KRW">원</button>
-            </span></label>
+            <label id="lblTxPrice">단가 ($)</label>
             <input type="number" name="price" step="0.01" min="0" inputmode="decimal" required />
             <div class="help muted" id="txPriceHint" style="margin: 4px 0 0; font-size: 11px; min-height: 14px;"></div>
           </div>
@@ -558,10 +554,7 @@
         <div class="form-row div" style="margin-top: 12px;">
           <div class="field"><label>티커 <button type="button" class="star-btn" id="starDiv">☆</button></label><input type="text" name="symbol" class="ticker-input" placeholder="SCHD" list="tickerList" required /></div>
           <div class="field">
-            <label>금액 <span class="seg seg-mini" id="divAmountCurr">
-              <button type="button" data-curr="USD" class="active">$</button>
-              <button type="button" data-curr="KRW">원</button>
-            </span><span id="lblDivAmount"></span></label>
+            <label id="lblDivAmount">금액 ($)</label>
             <input type="number" name="amount" step="0.01" min="0" inputmode="decimal" required />
             <div class="help muted" id="divAmountHint" style="margin: 4px 0 0; font-size: 11px; min-height: 14px;"></div>
           </div>
@@ -1273,10 +1266,6 @@ const api = {
 let CURRENT_RATE = 1350;
 const CURRENCY_KEY = 'portfolio_display_currency';
 let DISPLAY_CURRENCY = localStorage.getItem(CURRENCY_KEY) || 'USD';
-const TX_PRICE_CURR_KEY = 'portfolio_tx_price_currency';
-let TX_PRICE_CURRENCY = localStorage.getItem(TX_PRICE_CURR_KEY) || 'USD';
-const DIV_AMT_CURR_KEY = 'portfolio_div_amount_currency';
-let DIV_AMT_CURRENCY = localStorage.getItem(DIV_AMT_CURR_KEY) || 'USD';
 const fmtUSD = (n) => {
   if (DISPLAY_CURRENCY === 'KRW') return Math.round((Number(n) || 0) * CURRENT_RATE).toLocaleString('ko-KR') + '원';
   return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1898,8 +1887,8 @@ async function renderDividends() {
   document.getElementById('dividendCount').textContent = dividends.length;
   const taxOn = taxRate() > 0;
 
-  // Update label suffix (only the tax-mode indicator; currency is shown by the seg toggle)
-  document.getElementById('lblDivAmount').textContent = taxOn ? ' — 세전' : '';
+  // Refresh dividend amount label (reflects both currency and tax mode)
+  if (typeof updateDivAmountCurrencyUI === 'function') updateDivAmountCurrencyUI();
 
   // Update header
   const head = document.getElementById('dividendsHead');
@@ -2691,10 +2680,13 @@ async function startEditTransaction(id, type) {
   f.type.value = type;
   f.symbol.value = tx.symbol;
   f.shares.value = tx.shares;
-  // Stored price is USD; reset toggle to USD so the shown value matches storage
-  TX_PRICE_CURRENCY = 'USD';
-  localStorage.setItem(TX_PRICE_CURR_KEY, 'USD');
-  f.price.value = tx.price;
+  // Fill price in the currently displayed currency (KRW uses stored historical rate so roundtrip is exact)
+  if (DISPLAY_CURRENCY === 'KRW') {
+    const r = Number(tx.rate) || CURRENT_RATE;
+    f.price.value = Math.round(Number(tx.price) * r);
+  } else {
+    f.price.value = tx.price;
+  }
   f.date.value = tx.date;
   f.memo.value = tx.memo || '';
   document.getElementById('txFormTitle').textContent = `수정: ${tx.symbol.toUpperCase()} ${tx.date}`;
@@ -2726,10 +2718,13 @@ async function startEditDividend(id) {
   editingDividend = { id };
   const f = document.getElementById('formDividend');
   f.symbol.value = d.symbol;
-  // Stored amount is USD; reset toggle to USD so the shown value matches storage
-  DIV_AMT_CURRENCY = 'USD';
-  localStorage.setItem(DIV_AMT_CURR_KEY, 'USD');
-  f.amount.value = d.amount;
+  // Fill amount in the currently displayed currency
+  if (DISPLAY_CURRENCY === 'KRW') {
+    const r = Number(d.rate) || CURRENT_RATE;
+    f.amount.value = Math.round(Number(d.amount) * r);
+  } else {
+    f.amount.value = d.amount;
+  }
   f.date.value = d.date;
   f.memo.value = d.memo || '';
   document.getElementById('divFormTitle').textContent = `수정: ${d.symbol.toUpperCase()} ${d.date}`;
@@ -2908,20 +2903,14 @@ document.getElementById('btnRefreshPrices').addEventListener('click', async () =
 });
 
 // Forms
-/* ---- Transaction price currency toggle ---- */
+/* ---- Transaction price: currency follows header USD/원 toggle (DISPLAY_CURRENCY) ---- */
 function updateTxPriceCurrencyUI() {
-  document.querySelectorAll('#txPriceCurr button').forEach(b =>
-    b.classList.toggle('active', b.dataset.curr === TX_PRICE_CURRENCY)
-  );
   const priceInput = document.querySelector('#formTransaction input[name="price"]');
+  const label = document.getElementById('lblTxPrice');
+  if (label) label.textContent = DISPLAY_CURRENCY === 'KRW' ? '단가 (원)' : '단가 ($)';
   if (priceInput) {
-    if (TX_PRICE_CURRENCY === 'KRW') {
-      priceInput.placeholder = '50,000';
-      priceInput.step = '1';
-    } else {
-      priceInput.placeholder = '150.00';
-      priceInput.step = '0.01';
-    }
+    if (DISPLAY_CURRENCY === 'KRW') { priceInput.placeholder = '50,000'; priceInput.step = '1'; }
+    else { priceInput.placeholder = '150.00'; priceInput.step = '0.01'; }
   }
   updateTxPriceHint();
 }
@@ -2933,7 +2922,7 @@ async function updateTxPriceHint() {
   if (!raw || raw <= 0) { hintEl.textContent = ''; return; }
   const date = f.date.value;
   const rate = date ? await getRateForDate(date) : CURRENT_RATE;
-  if (TX_PRICE_CURRENCY === 'KRW') {
+  if (DISPLAY_CURRENCY === 'KRW') {
     const usd = raw / rate;
     hintEl.textContent = `≈ $${usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} · 환율 ${Math.round(rate).toLocaleString('ko-KR')}원`;
   } else {
@@ -2941,13 +2930,6 @@ async function updateTxPriceHint() {
     hintEl.textContent = `≈ ${Math.round(krw).toLocaleString('ko-KR')}원 · 환율 ${Math.round(rate).toLocaleString('ko-KR')}원`;
   }
 }
-document.querySelectorAll('#txPriceCurr button').forEach(b => {
-  b.addEventListener('click', () => {
-    TX_PRICE_CURRENCY = b.dataset.curr;
-    localStorage.setItem(TX_PRICE_CURR_KEY, TX_PRICE_CURRENCY);
-    updateTxPriceCurrencyUI();
-  });
-});
 
 const formTx = document.getElementById('formTransaction');
 formTx.querySelector('input[name="price"]').addEventListener('input', updateTxPriceHint);
@@ -2959,8 +2941,8 @@ formTx.addEventListener('submit', async (e) => {
   const rawPrice = parseFloat(f.price.value);
   // Save exchange rate at time of transaction (historical if past date, current otherwise)
   const rate = await getRateForDate(f.date.value);
-  // If user entered price in KRW, convert to USD for storage (storage is USD-normalized)
-  const priceUSD = TX_PRICE_CURRENCY === 'KRW' ? (rawPrice / rate) : rawPrice;
+  // If display is in KRW, input is in KRW too — convert to USD for storage (storage stays USD-normalized)
+  const priceUSD = DISPLAY_CURRENCY === 'KRW' ? (rawPrice / rate) : rawPrice;
   const payload = { symbol: f.symbol.value.trim().toUpperCase(), shares: parseFloat(f.shares.value), price: priceUSD, date: f.date.value, memo: f.memo.value.trim() };
   payload.rate = rate;
 
@@ -2996,20 +2978,20 @@ formTx.addEventListener('submit', async (e) => {
   }
   await refreshAll();
 });
-/* ---- Dividend amount currency toggle ---- */
+/* ---- Dividend amount: currency follows header USD/원 toggle (DISPLAY_CURRENCY) ---- */
 function updateDivAmountCurrencyUI() {
-  document.querySelectorAll('#divAmountCurr button').forEach(b =>
-    b.classList.toggle('active', b.dataset.curr === DIV_AMT_CURRENCY)
-  );
   const amtInput = document.querySelector('#formDividend input[name="amount"]');
   if (amtInput) {
-    if (DIV_AMT_CURRENCY === 'KRW') {
-      amtInput.placeholder = '30,000';
-      amtInput.step = '1';
-    } else {
-      amtInput.placeholder = '25.00';
-      amtInput.step = '0.01';
-    }
+    if (DISPLAY_CURRENCY === 'KRW') { amtInput.placeholder = '30,000'; amtInput.step = '1'; }
+    else { amtInput.placeholder = '25.00'; amtInput.step = '0.01'; }
+  }
+  // Also refresh the label since tax-mode text depends on currency too — render handles it,
+  // but call it here so switching currency updates the label immediately.
+  const label = document.getElementById('lblDivAmount');
+  if (label) {
+    const taxOn = taxRate() > 0;
+    const cur = DISPLAY_CURRENCY === 'KRW' ? '(원)' : '($)';
+    label.textContent = `금액 ${cur}${taxOn ? ' — 세전' : ''}`;
   }
   updateDivAmountHint();
 }
@@ -3021,7 +3003,7 @@ async function updateDivAmountHint() {
   if (!raw || raw <= 0) { hintEl.textContent = ''; return; }
   const date = f.date.value;
   const rate = date ? await getRateForDate(date) : CURRENT_RATE;
-  if (DIV_AMT_CURRENCY === 'KRW') {
+  if (DISPLAY_CURRENCY === 'KRW') {
     const usd = raw / rate;
     hintEl.textContent = `≈ $${usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} · 환율 ${Math.round(rate).toLocaleString('ko-KR')}원`;
   } else {
@@ -3029,13 +3011,6 @@ async function updateDivAmountHint() {
     hintEl.textContent = `≈ ${Math.round(krw).toLocaleString('ko-KR')}원 · 환율 ${Math.round(rate).toLocaleString('ko-KR')}원`;
   }
 }
-document.querySelectorAll('#divAmountCurr button').forEach(b => {
-  b.addEventListener('click', () => {
-    DIV_AMT_CURRENCY = b.dataset.curr;
-    localStorage.setItem(DIV_AMT_CURR_KEY, DIV_AMT_CURRENCY);
-    updateDivAmountCurrencyUI();
-  });
-});
 
 const formDiv = document.getElementById('formDividend');
 formDiv.querySelector('input[name="amount"]').addEventListener('input', updateDivAmountHint);
@@ -3046,8 +3021,8 @@ formDiv.addEventListener('submit', async (e) => {
   const f = e.target;
   const rawAmt = parseFloat(f.amount.value);
   const rate = await getRateForDate(f.date.value);
-  // If user entered amount in KRW, convert to USD for storage
-  const amountUSD = DIV_AMT_CURRENCY === 'KRW' ? (rawAmt / rate) : rawAmt;
+  // Currency follows header toggle
+  const amountUSD = DISPLAY_CURRENCY === 'KRW' ? (rawAmt / rate) : rawAmt;
   const payload = { symbol: f.symbol.value.trim().toUpperCase(), amount: amountUSD, date: f.date.value, memo: f.memo.value.trim() };
   payload.rate = rate;
   if (editingDividend) {
@@ -3148,6 +3123,9 @@ document.getElementById('currencyToggle').addEventListener('click', async (e) =>
   DISPLAY_CURRENCY = btn.dataset.currency;
   localStorage.setItem(CURRENCY_KEY, DISPLAY_CURRENCY);
   updateCurrencyToggleUI();
+  // Sync form input placeholders/labels/hints to the new currency
+  if (typeof updateTxPriceCurrencyUI === 'function') updateTxPriceCurrencyUI();
+  if (typeof updateDivAmountCurrencyUI === 'function') updateDivAmountCurrencyUI();
   await refreshAll();
 });
 updateCurrencyToggleUI();
