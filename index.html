@@ -522,10 +522,10 @@
           <div class="field"><label>유형</label><select name="type"><option value="buy">매수</option><option value="sell">매도</option></select></div>
           <div class="field"><label>티커 <button type="button" class="star-btn" id="starTx">☆</button></label><input type="text" name="symbol" class="ticker-input" placeholder="AAPL" list="tickerList" required /></div>
           <div class="field"><label>수량</label><input type="number" name="shares" step="0.0001" min="0" inputmode="decimal" required /></div>
-          <div class="field">
+          <div class="field" style="position: relative;">
             <label id="lblTxPrice">단가 ($)</label>
             <input type="number" name="price" step="0.01" min="0" inputmode="decimal" required />
-            <div class="help muted" id="txPriceHint" style="margin: 4px 0 0; font-size: 11px; min-height: 14px;"></div>
+            <div class="help muted" id="txPriceHint" style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; font-size: 11px; pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
           </div>
           <div class="field"><label>날짜</label><input type="date" name="date" required /></div>
           <div class="field"><label>메모</label><input type="text" name="memo" placeholder="(선택)" /></div>
@@ -553,10 +553,10 @@
         <div class="ticker-suggest"><div class="ticker-pills" id="pillsDiv"></div></div>
         <div class="form-row div" style="margin-top: 12px;">
           <div class="field"><label>티커 <button type="button" class="star-btn" id="starDiv">☆</button></label><input type="text" name="symbol" class="ticker-input" placeholder="SCHD" list="tickerList" required /></div>
-          <div class="field">
+          <div class="field" style="position: relative;">
             <label id="lblDivAmount">금액 ($)</label>
             <input type="number" name="amount" step="0.01" min="0" inputmode="decimal" required />
-            <div class="help muted" id="divAmountHint" style="margin: 4px 0 0; font-size: 11px; min-height: 14px;"></div>
+            <div class="help muted" id="divAmountHint" style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; font-size: 11px; pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
           </div>
           <div class="field"><label>지급일</label><input type="date" name="date" required /></div>
           <div class="field"><label>메모</label><input type="text" name="memo" placeholder="(선택)" /></div>
