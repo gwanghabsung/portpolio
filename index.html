@@ -151,6 +151,11 @@
   tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: var(--hover-bg); }
   td.right, th.right { text-align: right; font-variant-numeric: tabular-nums; }
+  th.sortable { cursor: pointer; user-select: none; transition: color 0.15s; }
+  th.sortable:hover { color: var(--text); }
+  th.sortable.active { color: var(--text); }
+  .sort-ind { display: inline-block; margin-left: 4px; font-size: 9px; opacity: 0.35; letter-spacing: -0.5px; }
+  th.sortable.active .sort-ind { opacity: 1; }
   td.ticker-cell { font-family: 'JetBrains Mono', monospace; font-weight: 500; letter-spacing: 0.02em; }
   .empty { padding: 40px; text-align: center; color: var(--muted); font-size: 13px; }
 
@@ -501,8 +506,16 @@
         <div class="section-note" id="holdingsNote">평균 단가는 매수 평균</div>
       </div>
       <table>
-        <thead>
-          <tr><th>티커</th><th class="right">수량</th><th class="right">평균/현재</th><th class="right">평가금액</th><th class="right">미실현</th><th class="right">배당</th><th class="right">YoC</th></tr>
+        <thead id="holdingsHead">
+          <tr>
+            <th class="sortable" data-sort="symbol">티커<span class="sort-ind"></span></th>
+            <th class="right sortable" data-sort="shares">수량<span class="sort-ind"></span></th>
+            <th class="right sortable" data-sort="avgPrice">평균/현재<span class="sort-ind"></span></th>
+            <th class="right sortable" data-sort="value">평가금액<span class="sort-ind"></span></th>
+            <th class="right sortable" data-sort="unrealized">미실현<span class="sort-ind"></span></th>
+            <th class="right sortable" data-sort="dividends">배당<span class="sort-ind"></span></th>
+            <th class="right sortable" data-sort="yoc">YoC<span class="sort-ind"></span></th>
+          </tr>
         </thead>
         <tbody id="holdingsBody"></tbody>
       </table>
@@ -1786,6 +1799,55 @@ async function clearPositions() {
    ============================================================ */
 let chartMonthly, chartBySymbol, chartGoal, chartProgress;
 
+/* ---- Holdings table sort ---- */
+const HOLDINGS_SORT_KEY = 'portfolio_holdings_sort';
+let holdingsSort = (() => {
+  try { return JSON.parse(localStorage.getItem(HOLDINGS_SORT_KEY)) || { by: 'value', dir: 'desc' }; }
+  catch { return { by: 'value', dir: 'desc' }; }
+})();
+function sortValue(h, key) {
+  const useKRW = DISPLAY_CURRENCY === 'KRW';
+  switch (key) {
+    case 'symbol':     return h.symbol || '';
+    case 'shares':     return h.heldShares || 0;
+    case 'avgPrice':   return (useKRW ? h.avgBuyKRW : h.avgBuy) || 0;
+    case 'value':      return (useKRW ? (h.currentValueKRW ?? h.heldCostKRW) : (h.currentValue ?? h.heldCost)) || 0;
+    case 'unrealized': return (useKRW ? h.unrealizedKRW : h.unrealizedPL) ?? -Infinity;
+    case 'dividends':  return (useKRW ? h.dividendsKRW : h.dividends) || 0;
+    case 'yoc':        return h.heldCost > 0 ? (h.dividends / h.heldCost) * 100 : 0;
+    default:           return 0;
+  }
+}
+function sortHoldings(list) {
+  const { by, dir } = holdingsSort;
+  const mult = dir === 'asc' ? 1 : -1;
+  return list.slice().sort((a, b) => {
+    const va = sortValue(a, by), vb = sortValue(b, by);
+    if (typeof va === 'string') return va.localeCompare(vb) * mult;
+    return (va - vb) * mult;
+  });
+}
+function updateHoldingsSortUI() {
+  document.querySelectorAll('#holdingsHead th.sortable').forEach(th => {
+    const active = th.dataset.sort === holdingsSort.by;
+    th.classList.toggle('active', active);
+    const ind = th.querySelector('.sort-ind');
+    if (ind) ind.textContent = active ? (holdingsSort.dir === 'asc' ? '▲' : '▼') : '▽';
+  });
+}
+document.querySelectorAll('#holdingsHead th.sortable').forEach(th => {
+  th.addEventListener('click', () => {
+    const by = th.dataset.sort;
+    if (holdingsSort.by === by) {
+      holdingsSort.dir = holdingsSort.dir === 'desc' ? 'asc' : 'desc';
+    } else {
+      holdingsSort = { by, dir: by === 'symbol' ? 'asc' : 'desc' };
+    }
+    localStorage.setItem(HOLDINGS_SORT_KEY, JSON.stringify(holdingsSort));
+    renderDashboard();
+  });
+});
+
 async function renderDashboard() {
   const holdings = await computeHoldings();
   const totalCost = holdings.reduce((s, h) => s + h.heldCost, 0);
@@ -1833,9 +1895,13 @@ async function renderDashboard() {
 
   document.getElementById('holdingsNote').textContent = active.length + '개 보유 중' + (hasPrices ? '' : ' · 시세 미연결');
 
+  // Apply user-selected sort + refresh sort indicators
+  updateHoldingsSortUI();
+  const sortedActive = sortHoldings(active);
+
   const tbody = document.getElementById('holdingsBody');
-  if (active.length === 0) { tbody.innerHTML = '<tr><td class="empty" colspan="7">아직 보유 종목이 없어요. "거래"에서 첫 매수를 추가해보세요.</td></tr>'; return; }
-  tbody.innerHTML = active.map(h => {
+  if (sortedActive.length === 0) { tbody.innerHTML = '<tr><td class="empty" colspan="7">아직 보유 종목이 없어요. "거래"에서 첫 매수를 추가해보세요.</td></tr>'; return; }
+  tbody.innerHTML = sortedActive.map(h => {
     const yoc = h.heldCost > 0 ? (h.dividends / h.heldCost) * 100 : 0;
     const priceDisplay = h.currentPrice !== null
       ? `<div>${fmtCurrency(h.avgBuy, h.avgBuyKRW)}</div><div class="muted" style="font-size: 11px;">${fmtCurrency(h.currentPrice, h.currentPriceKRW)}</div>`
