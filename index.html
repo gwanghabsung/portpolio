@@ -860,6 +860,14 @@
       <div class="settings-row"><div class="lbl">현재 환율 (USD → KRW)</div><div class="val"><input type="number" id="inputRate" step="0.01" min="0" inputmode="decimal" /></div></div>
       <div class="settings-row"><div class="lbl">모드</div><div class="val"><span class="badge live" id="rateMode">자동</span> <button class="btn btn-ghost small" id="btnRateAuto" style="margin-left: 8px;">자동으로 되돌리기</button></div></div>
       <div class="settings-row"><div class="lbl">마지막 갱신</div><div class="val muted" id="rateUpdated" style="font-size: 13px;">—</div></div>
+      <div class="settings-row">
+        <div class="lbl">과거 환율 채우기</div>
+        <div class="val">
+          <button class="btn btn-ghost small" id="btnBackfillRates">과거 매수/배당의 환율 자동 채우기</button>
+          <div class="help" style="margin: 6px 0 0;">환율 정보가 없는 기존 기록에 매수/배당 날짜 기준 실제 환율을 API로 자동 조회해서 채웁니다. 원화 손익이 정확해집니다.</div>
+          <div class="help muted" id="backfillStatus" style="margin: 4px 0 0;"></div>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -1264,6 +1272,37 @@ const fmtKRWraw = (krw) => Math.round(Number(krw) || 0).toLocaleString('ko-KR') 
 const fmtShares = (n) => (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 4 }) + '주';
 const currencySymbol = () => DISPLAY_CURRENCY === 'KRW' ? '원' : '$';
 const fmtSecondary = (usdAmount) => DISPLAY_CURRENCY === 'KRW' ? fmtUSDraw(usdAmount) : fmtKRW(usdAmount);
+// Historical exchange rate cache and fetcher
+const rateCache = {};
+async function getRateForDate(dateStr) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (!dateStr || dateStr >= today) return CURRENT_RATE;
+  if (rateCache[dateStr]) return rateCache[dateStr];
+  try {
+    const r = await fetch(`https://api.frankfurter.dev/v1/${dateStr}?base=USD&symbols=KRW`);
+    if (!r.ok) return CURRENT_RATE;
+    const data = await r.json();
+    const rate = data.rates?.KRW;
+    if (rate) { rateCache[dateStr] = rate; return rate; }
+    return CURRENT_RATE;
+  } catch { return CURRENT_RATE; }
+}
+// Currency display helper: uses historical/accurate KRW when in KRW mode
+const fmtCurrency = (usdVal, krwVal) => {
+  if (DISPLAY_CURRENCY === 'KRW') {
+    const v = Number(krwVal); const use = (isFinite(v) && v !== null) ? v : (Number(usdVal) || 0) * CURRENT_RATE;
+    return Math.round(use).toLocaleString('ko-KR') + '원';
+  }
+  return fmtUSDraw(usdVal);
+};
+const signedCurrency = (usdVal, krwVal) => {
+  if (DISPLAY_CURRENCY === 'KRW') {
+    const v = Number(krwVal); const use = (isFinite(v) && v !== null) ? v : (Number(usdVal) || 0) * CURRENT_RATE;
+    return (use >= 0 ? '+' : '−') + Math.round(Math.abs(use)).toLocaleString('ko-KR') + '원';
+  }
+  const u = Number(usdVal) || 0;
+  return (u >= 0 ? '+' : '−') + fmtUSDraw(Math.abs(u));
+};
 const fmtNum = (n, d = 4) => (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: d });
 const fmtPct = (n) => (Number(n) || 0).toFixed(2) + '%';
 const fmtPctSigned = (n) => (n >= 0 ? '+' : '') + (Number(n) || 0).toFixed(2) + '%';
@@ -1287,24 +1326,60 @@ function taxUSD(gross) { return gross * taxRate(); }
 async function computeHoldings() {
   const [purchases, sells, dividends] = await Promise.all([api.getPurchases(), api.getSells(), api.getDividends()]);
   const map = new Map();
-  const ensure = (sym) => { if (!map.has(sym)) map.set(sym, { symbol: sym, buyShares: 0, buyCost: 0, sellShares: 0, sellProceeds: 0, dividendsGross: 0 }); return map.get(sym); };
-  for (const p of purchases) { const h = ensure(p.symbol.toUpperCase()); h.buyShares += Number(p.shares); h.buyCost += Number(p.shares) * Number(p.price); }
-  for (const s of sells) { const h = ensure(s.symbol.toUpperCase()); h.sellShares += Number(s.shares); h.sellProceeds += Number(s.shares) * Number(s.price); }
-  for (const d of dividends) { const h = ensure(d.symbol.toUpperCase()); h.dividendsGross += Number(d.amount); }
+  const ensure = (sym) => { if (!map.has(sym)) map.set(sym, { symbol: sym, buyShares: 0, buyCost: 0, buyCostKRW: 0, sellShares: 0, sellProceeds: 0, sellProceedsKRW: 0, dividendsGross: 0, dividendsGrossKRW: 0 }); return map.get(sym); };
+  for (const p of purchases) {
+    const h = ensure(p.symbol.toUpperCase());
+    const shares = Number(p.shares), price = Number(p.price), rate = Number(p.rate) || CURRENT_RATE;
+    h.buyShares += shares;
+    h.buyCost += shares * price;
+    h.buyCostKRW += shares * price * rate;
+  }
+  for (const s of sells) {
+    const h = ensure(s.symbol.toUpperCase());
+    const shares = Number(s.shares), price = Number(s.price), rate = Number(s.rate) || CURRENT_RATE;
+    h.sellShares += shares;
+    h.sellProceeds += shares * price;
+    h.sellProceedsKRW += shares * price * rate;
+  }
+  for (const d of dividends) {
+    const h = ensure(d.symbol.toUpperCase());
+    const amount = Number(d.amount), rate = Number(d.rate) || CURRENT_RATE;
+    h.dividendsGross += amount;
+    h.dividendsGrossKRW += amount * rate;
+  }
   const result = [];
   const tr = taxRate();
   for (const h of map.values()) {
     const avgBuy = h.buyShares > 0 ? h.buyCost / h.buyShares : 0;
+    const avgBuyKRW = h.buyShares > 0 ? h.buyCostKRW / h.buyShares : 0;
     const heldShares = h.buyShares - h.sellShares;
     const heldCost = Math.max(0, heldShares) * avgBuy;
+    const heldCostKRW = Math.max(0, heldShares) * avgBuyKRW;
     const realizedPL = h.sellProceeds - (h.sellShares * avgBuy);
+    const realizedPLKRW = h.sellProceedsKRW - (h.sellShares * avgBuyKRW);
     const dividends = h.dividendsGross * (1 - tr);
+    const dividendsKRW = h.dividendsGrossKRW * (1 - tr);
     const quote = priceCache[h.symbol];
     const currentPrice = quote ? quote.price : null;
+    const currentPriceKRW = currentPrice !== null ? currentPrice * CURRENT_RATE : null;
     const currentValue = (currentPrice && heldShares > 0) ? heldShares * currentPrice : null;
+    const currentValueKRW = currentValue !== null ? currentValue * CURRENT_RATE : null;
     const unrealizedPL = (currentValue !== null) ? currentValue - heldCost : null;
+    const unrealizedKRW = (currentValueKRW !== null) ? currentValueKRW - heldCostKRW : null;
     const unrealizedPct = (unrealizedPL !== null && heldCost > 0) ? (unrealizedPL / heldCost) * 100 : null;
-    result.push({ symbol: h.symbol, heldShares, avgBuy, heldCost, currentPrice, currentValue, unrealizedPL, unrealizedPct, dividends, dividendsGross: h.dividendsGross, realizedPL });
+    const unrealizedKRWPct = (unrealizedKRW !== null && heldCostKRW > 0) ? (unrealizedKRW / heldCostKRW) * 100 : null;
+    result.push({
+      symbol: h.symbol, heldShares,
+      avgBuy, avgBuyKRW,
+      heldCost, heldCostKRW,
+      currentPrice, currentPriceKRW,
+      currentValue, currentValueKRW,
+      unrealizedPL, unrealizedKRW, unrealizedPct, unrealizedKRWPct,
+      dividends, dividendsKRW,
+      dividendsGross: h.dividendsGross,
+      dividendsGrossKRW: h.dividendsGrossKRW,
+      realizedPL, realizedPLKRW
+    });
   }
   return result.filter(h => h.heldShares > 0.0001 || h.dividendsGross > 0 || Math.abs(h.realizedPL) > 0.005)
                .sort((a, b) => (b.currentValue || b.heldCost) - (a.currentValue || a.heldCost));
@@ -1706,24 +1781,33 @@ let chartMonthly, chartBySymbol, chartGoal, chartProgress;
 async function renderDashboard() {
   const holdings = await computeHoldings();
   const totalCost = holdings.reduce((s, h) => s + h.heldCost, 0);
+  const totalCostKRW = holdings.reduce((s, h) => s + h.heldCostKRW, 0);
   const totalDiv = holdings.reduce((s, h) => s + h.dividends, 0); // net if tax enabled
+  const totalDivKRW = holdings.reduce((s, h) => s + h.dividendsKRW, 0);
   const totalRealized = holdings.reduce((s, h) => s + h.realizedPL, 0);
+  const totalRealizedKRW = holdings.reduce((s, h) => s + h.realizedPLKRW, 0);
   const active = holdings.filter(h => h.heldShares > 0.0001);
   const hasPrices = active.some(h => h.currentValue !== null);
   const totalValue = active.reduce((s, h) => s + (h.currentValue !== null ? h.currentValue : h.heldCost), 0);
+  const totalValueKRW = active.reduce((s, h) => s + (h.currentValueKRW !== null ? h.currentValueKRW : h.heldCostKRW), 0);
   const totalUnrealized = hasPrices ? active.reduce((s, h) => s + (h.unrealizedPL !== null ? h.unrealizedPL : 0), 0) : null;
-  const unrealizedPct = (totalUnrealized !== null && totalCost > 0) ? (totalUnrealized / totalCost) * 100 : null;
+  const totalUnrealizedKRW = hasPrices ? active.reduce((s, h) => s + (h.unrealizedKRW !== null ? h.unrealizedKRW : 0), 0) : null;
+  const useKRW = DISPLAY_CURRENCY === 'KRW';
+  const unrealizedPct = (totalUnrealized !== null && totalCost > 0)
+    ? (useKRW ? (totalUnrealizedKRW / totalCostKRW) * 100 : (totalUnrealized / totalCost) * 100)
+    : null;
 
-  document.getElementById('statValue').textContent = hasPrices ? fmtUSD0(totalValue) : fmtUSD0(totalCost);
-  document.getElementById('statValueKRW').textContent = fmtSecondary(hasPrices ? totalValue : totalCost) + (hasPrices ? '' : ' (cost)');
+  document.getElementById('statValue').textContent = fmtCurrency(hasPrices ? totalValue : totalCost, hasPrices ? totalValueKRW : totalCostKRW);
+  document.getElementById('statValueKRW').textContent = (useKRW ? fmtUSDraw(hasPrices ? totalValue : totalCost) : fmtKRWraw(hasPrices ? totalValueKRW : totalCostKRW)) + (hasPrices ? '' : ' (cost)');
 
   const unEl = document.getElementById('statUnrealized');
   const unSub = document.getElementById('statUnrealizedSub');
   if (totalUnrealized !== null) {
-    unEl.textContent = signedUSD(totalUnrealized);
-    unEl.className = 'value display num ' + (totalUnrealized >= 0 ? 'pos' : 'neg');
+    const displayVal = useKRW ? totalUnrealizedKRW : totalUnrealized;
+    unEl.textContent = signedCurrency(totalUnrealized, totalUnrealizedKRW);
+    unEl.className = 'value display num ' + (displayVal >= 0 ? 'pos' : 'neg');
     unSub.textContent = unrealizedPct !== null ? fmtPctSigned(unrealizedPct) : '';
-    unSub.className = 'sub ' + (totalUnrealized >= 0 ? 'pos' : 'neg');
+    unSub.className = 'sub ' + (displayVal >= 0 ? 'pos' : 'neg');
   } else {
     unEl.textContent = '—'; unEl.className = 'value display num muted';
     unSub.textContent = hasFinnhubKey() ? '시세 조회 대기' : '설정에서 Finnhub API 키 등록';
@@ -1731,12 +1815,13 @@ async function renderDashboard() {
   }
 
   const taxOn = taxRate() > 0;
-  document.getElementById('statDividends').textContent = fmtUSD(totalDiv);
-  document.getElementById('statDividendsKRW').textContent = fmtSecondary(totalDiv) + (taxOn ? ' (세후)' : '');
+  document.getElementById('statDividends').textContent = fmtCurrency(totalDiv, totalDivKRW);
+  document.getElementById('statDividendsKRW').textContent = (useKRW ? fmtUSDraw(totalDiv) : fmtKRWraw(totalDivKRW)) + (taxOn ? ' (세후)' : '');
   const realizedEl = document.getElementById('statRealized');
-  realizedEl.textContent = signedUSD(totalRealized);
-  realizedEl.className = 'value display num ' + (totalRealized >= 0 ? 'pos' : (totalRealized < 0 ? 'neg' : ''));
-  document.getElementById('statRealizedKRW').textContent = signedKRW(totalRealized);
+  const realizedDisplayVal = useKRW ? totalRealizedKRW : totalRealized;
+  realizedEl.textContent = signedCurrency(totalRealized, totalRealizedKRW);
+  realizedEl.className = 'value display num ' + (realizedDisplayVal >= 0 ? 'pos' : (realizedDisplayVal < 0 ? 'neg' : ''));
+  document.getElementById('statRealizedKRW').textContent = useKRW ? ((totalRealized >= 0 ? '+' : '−') + fmtUSDraw(Math.abs(totalRealized))) : ((totalRealizedKRW >= 0 ? '+' : '−') + fmtKRWraw(Math.abs(totalRealizedKRW)));
 
   document.getElementById('holdingsNote').textContent = active.length + '개 보유 중' + (hasPrices ? '' : ' · 시세 미연결');
 
@@ -1745,13 +1830,16 @@ async function renderDashboard() {
   tbody.innerHTML = active.map(h => {
     const yoc = h.heldCost > 0 ? (h.dividends / h.heldCost) * 100 : 0;
     const priceDisplay = h.currentPrice !== null
-      ? `<div>${fmtUSD(h.avgBuy)}</div><div class="muted" style="font-size: 11px;">${fmtUSD(h.currentPrice)}</div>`
-      : fmtUSD(h.avgBuy);
+      ? `<div>${fmtCurrency(h.avgBuy, h.avgBuyKRW)}</div><div class="muted" style="font-size: 11px;">${fmtCurrency(h.currentPrice, h.currentPriceKRW)}</div>`
+      : fmtCurrency(h.avgBuy, h.avgBuyKRW);
     const valueDisplay = h.currentValue !== null
-      ? `<div style="font-weight: 600; font-size: 14px;">${fmtUSD(h.currentValue)}</div><div class="muted" style="font-size: 11px; opacity: 0.7;">${fmtUSD(h.heldCost)} cost</div>`
-      : `<div style="font-weight: 600;">${fmtUSD(h.heldCost)}</div>`;
-    const unrealDisplay = h.unrealizedPL !== null
-      ? `<span class="${h.unrealizedPL >= 0 ? 'pos' : 'neg'}">${signedUSD(h.unrealizedPL)} <span style="font-size: 11px;">(${fmtPctSigned(h.unrealizedPct)})</span></span>`
+      ? `<div style="font-weight: 600; font-size: 14px;">${fmtCurrency(h.currentValue, h.currentValueKRW)}</div><div class="muted" style="font-size: 11px; opacity: 0.7;">${fmtCurrency(h.heldCost, h.heldCostKRW)} cost</div>`
+      : `<div style="font-weight: 600;">${fmtCurrency(h.heldCost, h.heldCostKRW)}</div>`;
+    const useKRW = DISPLAY_CURRENCY === 'KRW';
+    const unrealPL = useKRW ? h.unrealizedKRW : h.unrealizedPL;
+    const unrealPct = useKRW ? h.unrealizedKRWPct : h.unrealizedPct;
+    const unrealDisplay = unrealPL !== null
+      ? `<span class="${unrealPL >= 0 ? 'pos' : 'neg'}">${signedCurrency(h.unrealizedPL, h.unrealizedKRW)} <span style="font-size: 11px;">(${fmtPctSigned(unrealPct)})</span></span>`
       : '<span class="muted">—</span>';
     return `<tr>
       <td class="ticker-cell" data-label="티커">${h.symbol}</td>
@@ -1759,7 +1847,7 @@ async function renderDashboard() {
       <td class="right num" data-label="평균/현재">${priceDisplay}</td>
       <td class="right num" data-label="평가금액">${valueDisplay}</td>
       <td class="right num" data-label="미실현">${unrealDisplay}</td>
-      <td class="right num ${h.dividends > 0 ? 'pos' : 'muted'}" data-label="배당">${fmtUSD(h.dividends)}</td>
+      <td class="right num ${h.dividends > 0 ? 'pos' : 'muted'}" data-label="배당">${fmtCurrency(h.dividends, h.dividendsKRW)}</td>
       <td class="right num muted" data-label="YoC">${yoc > 0 ? fmtPct(yoc) : '—'}</td>
     </tr>`;
   }).join('');
@@ -2542,10 +2630,10 @@ async function renderCoach() {
    ============================================================ */
 async function fetchRateFromApi() {
   try {
-    const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=KRW');
+    const r = await fetch('https://api.frankfurter.dev/v2/rate/USD/KRW');
     if (!r.ok) throw new Error('rate fetch failed');
     const data = await r.json();
-    return data.rates.KRW;
+    return data.rate;
   } catch (e) { return null; }
 }
 async function refreshRate(force = false) {
@@ -2796,6 +2884,8 @@ formTx.addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = e.target;
   const payload = { symbol: f.symbol.value.trim().toUpperCase(), shares: parseFloat(f.shares.value), price: parseFloat(f.price.value), date: f.date.value, memo: f.memo.value.trim() };
+  // Save exchange rate at time of transaction (historical if past date, current otherwise)
+  payload.rate = await getRateForDate(payload.date);
 
   // Impulse check (only for new buys, not edits)
   if (f.type.value === 'buy' && !editingTransaction) {
@@ -2833,6 +2923,7 @@ formDiv.addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = e.target;
   const payload = { symbol: f.symbol.value.trim().toUpperCase(), amount: parseFloat(f.amount.value), date: f.date.value, memo: f.memo.value.trim() };
+  payload.rate = await getRateForDate(payload.date);
   if (editingDividend) {
     await api.updateDividend(editingDividend.id, payload);
     cancelEditDividend();
@@ -2986,6 +3077,39 @@ document.getElementById('inputRate').addEventListener('change', async (e) => {
   if (v > 0) { await api.saveRate({ value: v, manual: true, updatedAt: new Date().toISOString() }); CURRENT_RATE = v; updateRateUI(await api.getRate()); await refreshAll(); }
 });
 document.getElementById('btnRateAuto').addEventListener('click', async () => { await api.saveRate({ manual: false }); await refreshRate(true); await refreshAll(); });
+
+document.getElementById('btnBackfillRates').addEventListener('click', async () => {
+  const btn = document.getElementById('btnBackfillRates');
+  const status = document.getElementById('backfillStatus');
+  const store = loadStore();
+  // Collect records needing backfill
+  const targets = [];
+  for (const p of store.purchases) if (!p.rate && p.date) targets.push({ list: 'purchases', id: p.id, date: p.date });
+  for (const s of store.sells) if (!s.rate && s.date) targets.push({ list: 'sells', id: s.id, date: s.date });
+  for (const d of store.dividends) if (!d.rate && d.date) targets.push({ list: 'dividends', id: d.id, date: d.date });
+  if (targets.length === 0) { status.textContent = '이미 모든 기록에 환율 정보가 있어요.'; return; }
+  if (!confirm(`${targets.length}건의 기록에 대해 API에서 과거 환율을 조회합니다. 진행할까요?`)) return;
+  btn.disabled = true;
+  let done = 0, failed = 0;
+  for (const t of targets) {
+    status.textContent = `${done + 1}/${targets.length} 처리 중... (${t.date})`;
+    const rate = await getRateForDate(t.date);
+    if (rate && rate !== CURRENT_RATE) {
+      const idx = store[t.list].findIndex(x => x.id === t.id);
+      if (idx >= 0) { store[t.list][idx].rate = rate; done++; }
+    } else if (rate === CURRENT_RATE) {
+      // Still set it so we don't try again
+      const idx = store[t.list].findIndex(x => x.id === t.id);
+      if (idx >= 0) { store[t.list][idx].rate = CURRENT_RATE; done++; }
+    } else { failed++; }
+    // Small delay to be polite to the API
+    await new Promise(r => setTimeout(r, 50));
+  }
+  saveStore(store);
+  status.textContent = `완료: ${done}건 채워짐${failed > 0 ? `, ${failed}건 실패` : ''}. 대시보드가 재계산됩니다.`;
+  btn.disabled = false;
+  await refreshAll();
+});
 document.getElementById('btnRefreshRate').addEventListener('click', async () => { await refreshRate(true); await refreshAll(); });
 
 // Data

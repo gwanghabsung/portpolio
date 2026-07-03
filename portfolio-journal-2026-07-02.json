@@ -1,0 +1,174 @@
+{
+  "purchases": [
+    {
+      "id": "71226ba2-e8bf-40f5-8e33-e524bda6deee",
+      "symbol": "GOOGL",
+      "shares": 4,
+      "price": 188.55,
+      "date": "2026-07-02",
+      "memo": ""
+    },
+    {
+      "id": "8d67e401-592f-4ad6-9e8e-d72014df932a",
+      "symbol": "KO",
+      "shares": 8,
+      "price": 66.72,
+      "date": "2026-07-02",
+      "memo": ""
+    },
+    {
+      "id": "46f33f10-a544-429d-bce7-8554be6ee3ec",
+      "symbol": "SPYM",
+      "shares": 13,
+      "price": 76.09,
+      "date": "2026-07-02",
+      "memo": ""
+    },
+    {
+      "id": "6e45d1ee-96f1-4f27-9444-b86b4c2b63e8",
+      "symbol": "JEPQ",
+      "shares": 71,
+      "price": 58.52,
+      "date": "2026-07-02",
+      "memo": ""
+    },
+    {
+      "id": "934acd9d-0fce-46a0-b471-2531914c2f54",
+      "symbol": "NVDY",
+      "shares": 120,
+      "price": 23.21,
+      "date": "2026-07-02",
+      "memo": ""
+    },
+    {
+      "id": "a02a4351-6bb9-4359-abca-e2c945734408",
+      "symbol": "CONY",
+      "shares": 22,
+      "price": 129.13,
+      "date": "2026-07-02",
+      "memo": ""
+    },
+    {
+      "id": "7fd2b059-1db1-4b83-b837-a98aa6dd0d73",
+      "symbol": "PLTR",
+      "shares": 3,
+      "price": 164.49,
+      "date": "2026-07-02",
+      "memo": ""
+    },
+    {
+      "id": "71c0113d-0a80-4cc7-903f-93bf680365ce",
+      "symbol": "MRNY",
+      "shares": 3,
+      "price": 21.29,
+      "date": "2026-07-02",
+      "memo": ""
+    }
+  ],
+  "sells": [],
+  "dividends": [],
+  "favorites": [],
+  "progressLog": [
+    {
+      "id": "8fb3732f-2b75-4cdb-ac1b-8af796583d7e",
+      "date": "2026-06-30",
+      "avgMonthlyUSD": 0,
+      "avgMonthlyKRW": 0,
+      "targetKRW": 1000000,
+      "rate": 1350,
+      "holdings": 0,
+      "invested": 0,
+      "taxApplied": false,
+      "auto": true
+    },
+    {
+      "id": "a500077c-8551-4d6f-b4c5-d6c5ebfa7707",
+      "date": "2026-07-02",
+      "avgMonthlyUSD": 0,
+      "avgMonthlyKRW": 0,
+      "targetKRW": 1000000,
+      "rate": 1350,
+      "holdings": 0,
+      "invested": 0,
+      "taxApplied": false,
+      "auto": true
+    }
+  ],
+  "goal": {
+    "monthlyKRW": 1000000,
+    "yieldPct": 4
+  },
+  "tax": {
+    "enabled": false,
+    "withholdingPct": 15,
+    "annualThresholdKRW": 20000000
+  },
+  "coach": {
+    "style": "accumulator"
+  },
+  "simulation": {
+    "years": 20,
+    "positions": [
+      {
+        "symbol": "JEPQ",
+        "shares": 71,
+        "currentPrice": 60.2,
+        "divPerShare": 2.408,
+        "divGrowthPct": 5,
+        "priceGrowthPct": 7,
+        "monthlyBuy": 0
+      },
+      {
+        "symbol": "NVDY",
+        "shares": 120,
+        "currentPrice": 12.38,
+        "divPerShare": 0.4952,
+        "divGrowthPct": 5,
+        "priceGrowthPct": 7,
+        "monthlyBuy": 0
+      },
+      {
+        "symbol": "GOOGL",
+        "shares": 4,
+        "currentPrice": 361.21,
+        "divPerShare": 14.4484,
+        "divGrowthPct": 5,
+        "priceGrowthPct": 7,
+        "monthlyBuy": 0
+      },
+      {
+        "symbol": "SPYM",
+        "shares": 13,
+        "currentPrice": 87.77,
+        "divPerShare": 3.5108,
+        "divGrowthPct": 5,
+        "priceGrowthPct": 7,
+        "monthlyBuy": 0
+      },
+      {
+        "symbol": "KO",
+        "shares": 8,
+        "currentPrice": 81.29,
+        "divPerShare": 3.2516,
+        "divGrowthPct": 5,
+        "priceGrowthPct": 7,
+        "monthlyBuy": 0
+      },
+      {
+        "symbol": "CONY",
+        "shares": 22,
+        "currentPrice": 20.23,
+        "divPerShare": 0.8092,
+        "divGrowthPct": 5,
+        "priceGrowthPct": 7,
+        "monthlyBuy": 0
+      }
+    ]
+  },
+  "rate": {
+    "value": 1350,
+    "manual": false,
+    "updatedAt": null
+  },
+  "updatedAt": "2026-07-02T04:48:46.556Z"
+}
